@@ -234,13 +234,19 @@ LOGGING = {
         },
     },
     'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
         'file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(BASE_DIR, 'logs/debug.log'),
             'formatter': 'verbose',
-        },
-        'console': {
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+        } if not os.getenv('CI') else {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
@@ -248,17 +254,17 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'],
+            'handlers': ['file', 'console'] if not os.getenv('CI') else ['console'],
             'level': 'INFO',
             'propagate': True,
         },
         'core': {
-            'handlers': ['file', 'console'],
+            'handlers': ['file', 'console'] if not os.getenv('CI') else ['console'],
             'level': 'INFO',
             'propagate': True,
         },
         'social': {
-            'handlers': ['file', 'console'],
+            'handlers': ['file', 'console'] if not os.getenv('CI') else ['console'],
             'level': 'INFO',
             'propagate': True,
         },
