@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.utils import timezone
-from ..models import LinkedInPost
+from linkedin.models import LinkedInPost
 from core.models import Campaign
 
 class LinkedInPostModelTests(TestCase):

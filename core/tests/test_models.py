@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.utils import timezone
-from ..models import Campaign, Post, MediaAsset
+from core.models import Campaign, Post, MediaAsset
 
 class CampaignModelTests(TestCase):
     def test_campaign_creation(self):

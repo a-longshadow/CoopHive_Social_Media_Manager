@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.utils import timezone
-from ..models import TwitterPost
+from twitter.models import TwitterPost
 from core.models import Campaign
 
 class TwitterPostModelTests(TestCase):
