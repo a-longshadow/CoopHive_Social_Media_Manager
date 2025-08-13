@@ -63,14 +63,17 @@ jobs:
       run: |
         railway up --service ${{ secrets.RAILWAY_SERVICE_NAME }}
     
-    - name: Run Migrations
+    - name: Run Migrations and Collect Static
       env:
         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        DEBUG: "False"
       run: |
         railway run python manage.py migrate
+        railway run python manage.py collectstatic --noinput
     
     - name: Run Deploy Checklist
       env:
         RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        DEBUG: "False"
       run: |
         railway run python deploy_checklist.py

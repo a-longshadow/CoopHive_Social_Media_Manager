@@ -29,8 +29,33 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-ye_#=odz5!*ayleldxo3gpwik1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Allow the Railway subdomain and custom domains
+RAILWAY_STATIC_URL = os.getenv('RAILWAY_STATIC_URL', '')
+RAILWAY_HOSTNAME = RAILWAY_STATIC_URL.replace('https://', '').replace('http://', '') if RAILWAY_STATIC_URL else None
 
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '.railway.app',  # Allow all railway.app subdomains
+    RAILWAY_HOSTNAME,
+] if not DEBUG else ['*']
+
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.railway.app',
+    RAILWAY_STATIC_URL,
+] if RAILWAY_STATIC_URL else []
+
+# Security settings
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # Application definition
 
@@ -82,15 +107,18 @@ if DEBUG:
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'allauth.account.middleware.AccountMiddleware',
 ]
+
+if DEBUG:
+    MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
 
 ROOT_URLCONF = 'coophive.urls'
 
@@ -159,6 +187,13 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
+# Whitenoise configuration
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Create required directories
+for directory in [STATIC_ROOT, *STATICFILES_DIRS]:
+    os.makedirs(directory, exist_ok=True)
 
 # Media files
 MEDIA_URL = '/media/'
