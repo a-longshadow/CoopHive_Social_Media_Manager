@@ -1,0 +1,229 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>CoopHive Social Media Manager – Home</title>
+    <link rel="icon" type="image/webp" href="{% static 'coophive_favicon.webp' %}" />
+    <link rel="apple-touch-icon" href="{% static 'coophive_logo.webp' %}" />
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #7c3aed;
+            --text: #ffffff;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #333;
+            overflow-x: hidden;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--text);
+            padding: 80px 20px;
+            animation: fadeIn 1s ease-out;
+        }
+        h1 {
+            font-size: 64px;
+            margin: 0 0 16px;
+            letter-spacing: -1.5px;
+            font-weight: 700;
+            text-align: center;
+        }
+        p.tagline {
+            font-size: 20px;
+            margin: 0 0 60px;
+            opacity: .9;
+            text-align: center;
+        }
+        .welcome-user {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            opacity: .95;
+        }
+        .welcome-user img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .welcome-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .welcome-text {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        nav {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        a.button {
+            padding: 14px 32px;
+            border-radius: 8px;
+            background: rgba(255,255,255,.15);
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+            transition: all .3s;
+        }
+        a.button:hover {
+            background: rgba(255,255,255,.3);
+            transform: translateY(-2px);
+        }
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .card {
+            max-width: 800px;
+            text-align: center;
+            animation: slideUp .7s ease-out;
+        }
+        footer {
+            padding: 20px 10px;
+            font-size: 14px;
+            color: #777;
+            text-align: center;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Stats Section */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(4px);
+        }
+        .stat-card h3 {
+            font-size: 36px;
+            margin: 0 0 8px;
+            font-weight: 700;
+        }
+        .stat-card p {
+            margin: 0;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    {% include "_nav.html" %}
+    <header>
+        {% if user.is_authenticated and user_info %}
+            <!-- Personalized Welcome for Authenticated Users -->
+            <div class="welcome-user">
+                {% if user_info.picture %}
+                    <img src="{{ user_info.picture }}"
+                         alt="Profile picture"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="welcome-avatar" style="display:none;">
+                        {{ user_info.first_name|first|upper }}
+                    </div>
+                {% else %}
+                    <div class="welcome-avatar">
+                        {{ user_info.first_name|first|upper }}
+                    </div>
+                {% endif %}
+
+                <div class="welcome-text">
+                    Welcome back, {{ user_info.first_name }}!
+                </div>
+            </div>
+            <h1>Your Social Media Dashboard</h1>
+            <p class="tagline">Manage all your social media content in one place</p>
+            <nav>
+                <a href="/campaigns/" class="button">View Campaigns</a>
+                <a href="/posts/new/" class="button">Create Post</a>
+                {% if user.is_superuser %}
+                    <a href="/admin/" class="button">Admin Panel</a>
+                {% endif %}
+            </nav>
+
+            {% if post_stats %}
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>{{ post_stats.total }}</h3>
+                    <p>Total Posts</p>
+                </div>
+                <div class="stat-card">
+                    <h3>{{ post_stats.scheduled }}</h3>
+                    <p>Scheduled</p>
+                </div>
+                <div class="stat-card">
+                    <h3>{{ post_stats.published }}</h3>
+                    <p>Published</p>
+                </div>
+                <div class="stat-card">
+                    <h3>{{ post_stats.platforms }}</h3>
+                    <p>Platforms</p>
+                </div>
+            </div>
+            {% endif %}
+
+        {% else %}
+            <!-- Default Welcome for Non-Authenticated Users -->
+            <h1>CoopHive Social Media Manager</h1>
+            <p class="tagline">Streamline your social media presence across all platforms</p>
+            <nav>
+                <a href="/user_account_manager/register/" class="button">Get Started</a>
+                <a href="/user_account_manager/login/" class="button">Sign In</a>
+            </nav>
+        {% endif %}
+    </header>
+    <main>
+        <div class="card">
+            {% if user.is_authenticated %}
+                <h2>Your Social Media Hub</h2>
+                <p>Create, schedule, and manage posts across multiple platforms. Track performance and engage with your audience all in one place.</p>
+            {% else %}
+                <h2>Unified Social Media Management</h2>
+                <p>Schedule posts for Twitter, LinkedIn, Farcaster, and Bluesky. Monitor engagement and manage your social presence efficiently.</p>
+            {% endif %}
+        </div>
+    </main>
+    <footer>
+        &copy; 2025 CoopHive
+    </footer>
+</body>
+</html>
