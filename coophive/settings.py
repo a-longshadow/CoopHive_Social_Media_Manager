@@ -220,6 +220,15 @@ COOPHIVE_DOMAIN_RESTRICTION = {
 }
 
 # Logging Configuration
+# Create logs directory if it doesn't exist and we're not in a managed environment
+if not (os.getenv('CI') or os.getenv('RAILWAY_ENVIRONMENT_NAME')):
+    logs_dir = os.path.join(BASE_DIR, 'logs')
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir)
+
+# Determine if we're in a managed environment (CI or Railway)
+IS_MANAGED_ENV = bool(os.getenv('CI') or os.getenv('RAILWAY_ENVIRONMENT_NAME'))
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -241,30 +250,26 @@ LOGGING = {
         },
         'file': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs/debug.log'),
-            'formatter': 'verbose',
-            'maxBytes': 1024 * 1024 * 5,  # 5 MB
-            'backupCount': 5,
-        } if not os.getenv('CI') else {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
+            'class': 'logging.StreamHandler' if IS_MANAGED_ENV else 'logging.handlers.RotatingFileHandler',
+            'formatter': 'simple' if IS_MANAGED_ENV else 'verbose',
+            **({"filename": os.path.join(BASE_DIR, 'logs/debug.log'),
+                "maxBytes": 1024 * 1024 * 5,  # 5 MB
+                "backupCount": 5} if not IS_MANAGED_ENV else {}),
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'] if not os.getenv('CI') else ['console'],
+            'handlers': ['console'] if IS_MANAGED_ENV else ['file', 'console'],
             'level': 'INFO',
             'propagate': True,
         },
         'core': {
-            'handlers': ['file', 'console'] if not os.getenv('CI') else ['console'],
+            'handlers': ['console'] if IS_MANAGED_ENV else ['file', 'console'],
             'level': 'INFO',
             'propagate': True,
         },
         'social': {
-            'handlers': ['file', 'console'] if not os.getenv('CI') else ['console'],
+            'handlers': ['console'] if IS_MANAGED_ENV else ['file', 'console'],
             'level': 'INFO',
             'propagate': True,
         },
