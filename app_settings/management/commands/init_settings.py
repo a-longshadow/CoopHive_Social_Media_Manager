@@ -1,8 +1,16 @@
 from django.core.management.base import BaseCommand
+from django.db import transaction
 from app_settings.models import AppSetting
 
 class Command(BaseCommand):
     help = 'Initialize application settings with default values'
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--force',
+            action='store_true',
+            help='Force update existing settings',
+        )
 
     def handle(self, *args, **options):
         settings_to_create = [
@@ -68,15 +76,34 @@ class Command(BaseCommand):
             },
         ]
 
-        for setting in settings_to_create:
-            _, created = AppSetting.objects.get_or_create(
-                key=setting['key'],
-                defaults={
-                    'value': setting['value'],
-                    'description': setting['description']
-                }
+        try:
+            with transaction.atomic():
+                created_count = 0
+                existing_count = 0
+                
+                for setting in settings_to_create:
+                    _, created = AppSetting.objects.get_or_create(
+                        key=setting['key'],
+                        defaults={
+                            'value': setting['value'],
+                            'description': setting['description']
+                        }
+                    )
+                    if created:
+                        created_count += 1
+                        self.stdout.write(self.style.SUCCESS(f'✓ Created setting: {setting["key"]}'))
+                    else:
+                        existing_count += 1
+                        self.stdout.write(f'→ Setting already exists: {setting["key"]}')
+                
+                self.stdout.write(
+                    self.style.SUCCESS(f'\n✅ Settings initialization complete! Created: {created_count}, Existing: {existing_count}')
+                )
+                
+        except Exception as e:
+            self.stdout.write(
+                self.style.ERROR(f'❌ Error initializing settings: {str(e)}')
             )
-            if created:
-                self.stdout.write(self.style.SUCCESS(f'Created setting: {setting["key"]}'))
-            else:
-                self.stdout.write(f'Setting already exists: {setting["key"]}')
+            # Don't raise in production to avoid deployment failures
+            if options.get('verbosity', 1) > 1:
+                raise

@@ -9,7 +9,7 @@ from .settings import *
 DEBUG = False
 
 # Security settings for production
-SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-here-change-in-railway')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-coophive-railway-secret-key-change-in-production-2025')
 
 # Host configuration
 ALLOWED_HOSTS = [
@@ -28,7 +28,7 @@ CSRF_TRUSTED_ORIGINS = [
 # Database configuration for Railway PostgreSQL
 DATABASES = {
     'default': dj_database_url.config(
-        default='sqlite:///db.sqlite3',
+        default=os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3'),
         conn_max_age=600,
         conn_health_checks=True,
     )
@@ -37,12 +37,23 @@ DATABASES = {
 # Static files configuration for production
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
-# Whitenoise for static files
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Whitenoise for static files - using updated Django 4.2+ compatible setting
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
-# Add whitenoise to middleware
-MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+# Ensure whitenoise is in middleware (will be inserted if not already present)
+if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 # Email configuration (database-first with environment fallback)
 EMAIL_BACKEND = 'user_account_manager.email_backend.DatabaseFirstEmailBackend'

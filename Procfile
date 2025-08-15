@@ -1,2 +1,2 @@
-web: python manage.py migrate && python manage.py collectstatic --noinput && python manage.py init_settings && python manage.py create_super_admins && gunicorn coophive.wsgi:application --bind 0.0.0.0:$PORT
-release: python manage.py migrate
+web: gunicorn coophive.wsgi:application --bind 0.0.0.0:$PORT
+release: python manage.py migrate && python manage.py init_settings && python manage.py create_super_admins
