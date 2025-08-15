@@ -135,11 +135,7 @@ LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# Domain restriction
-COOPHIVE_DOMAIN_RESTRICTION = {
-    'ENABLED': True,
-    'ALLOWED_DOMAIN': 'coophive.network',
-}
+# Domain restriction - handled below with database-first approach
 
 # Django Debug Toolbar
 if DEBUG:
@@ -183,31 +179,52 @@ WSGI_APPLICATION = 'coophive.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Database configuration - NO hardcoded defaults
-try:
-    import dj_database_url
-    # Try to get DATABASE_URL from environment or database settings
-    database_url = os.getenv('DATABASE_URL')
-    if not database_url:
-        # For development, allow SQLite if no DATABASE_URL is provided
-        # But still no hardcoded path - use environment variable
-        sqlite_path = os.getenv('SQLITE_PATH', str(BASE_DIR / 'db.sqlite3'))
-        database_url = f'sqlite:///{sqlite_path}'
-    
+# Database configuration - Simple and reliable
+database_url = os.getenv('DATABASE_URL')
+
+if database_url:
+    # Production: Parse DATABASE_URL manually (Railway provides this)
+    if database_url.startswith('postgresql://'):
+        # Parse PostgreSQL URL manually - no external dependency needed
+        import re
+        match = re.match(r'postgresql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)', database_url)
+        if match:
+            user, password, host, port, name = match.groups()
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.postgresql',
+                    'NAME': name,
+                    'USER': user,
+                    'PASSWORD': password,
+                    'HOST': host,
+                    'PORT': port,
+                    'CONN_MAX_AGE': 600,
+                }
+            }
+        else:
+            # Fallback if URL parsing fails
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.sqlite3',
+                    'NAME': BASE_DIR / 'db.sqlite3',
+                }
+            }
+    else:
+        # Other database types - fallback to SQLite
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
+else:
+    # Development: Use SQLite (reliable and simple)
     DATABASES = {
-        'default': dj_database_url.config(
-            default=database_url,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-except ImportError:
-    # If dj_database_url is not available, fail with clear message
-    raise ImportError(
-        "CRITICAL: dj_database_url is required for database configuration.\n"
-        "Install it with: pip install dj-database-url\n"
-        "This is required for both development and production."
-    )
 
 
 # Password validation
@@ -308,23 +325,31 @@ SOCIALACCOUNT_PROVIDERS = {
 # Use custom backend that loads settings dynamically at runtime
 EMAIL_BACKEND = 'user_account_manager.email_backend.DatabaseFirstEmailBackend'
 
-# Fallback settings for when custom backend can't load from database
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))
-EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'True').lower() == 'true'
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() == 'true'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@coophive.network')
+# Database-first settings with environment fallback - NO hardcoded defaults
+EMAIL_HOST = get_database_setting('EMAIL_HOST')
+EMAIL_PORT = int(get_database_setting('EMAIL_PORT'))
+EMAIL_USE_SSL = get_database_setting('EMAIL_USE_SSL').lower() == 'true'
+EMAIL_USE_TLS = get_database_setting('EMAIL_USE_TLS').lower() == 'true'
+EMAIL_HOST_USER = get_database_setting('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = get_database_setting('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = get_database_setting('DEFAULT_FROM_EMAIL')
 
-# Domain restriction settings for coophive.network
+# Domain restriction settings - Database-first with environment fallback
+# Use safe defaults during startup, will be overridden by auto-initialization
+def get_domain_restriction_setting(key, default_value):
+    """Safely get domain restriction setting with fallback to default during startup."""
+    try:
+        return get_database_setting(key)
+    except ValueError:
+        return default_value
+
 COOPHIVE_DOMAIN_RESTRICTION = {
-    'ENABLED': os.getenv('DOMAIN_RESTRICTION_ENABLED', 'True').lower() == 'true',
-    'GOOGLE_VERIFICATION': os.getenv('GOOGLE_VERIFICATION_ENABLED', 'True').lower() == 'true',
-    'ALLOWED_DOMAIN': 'coophive.network',
-    'SECURITY_ADMIN_EMAILS': os.getenv('SECURITY_ADMIN_EMAILS', '').split(','),
-    'ADMIN_BYPASS': os.getenv('ADMIN_BYPASS', 'False').lower() == 'true',
-    'LOG_USER_AGENTS': os.getenv('LOG_USER_AGENTS', 'True').lower() == 'true',
+    'ENABLED': get_domain_restriction_setting('DOMAIN_RESTRICTION_ENABLED', 'True').lower() == 'true',
+    'GOOGLE_VERIFICATION': get_domain_restriction_setting('GOOGLE_VERIFICATION_ENABLED', 'True').lower() == 'true',
+    'ALLOWED_DOMAIN': get_domain_restriction_setting('ALLOWED_DOMAIN', 'coophive.network'),
+    'SECURITY_ADMIN_EMAILS': get_domain_restriction_setting('SECURITY_ADMIN_EMAILS', '').split(',') if get_domain_restriction_setting('SECURITY_ADMIN_EMAILS', '') else [],
+    'ADMIN_BYPASS': get_domain_restriction_setting('ADMIN_BYPASS', 'False').lower() == 'true',
+    'LOG_USER_AGENTS': get_domain_restriction_setting('LOG_USER_AGENTS', 'True').lower() == 'true',
 }
 
 # Logging Configuration
