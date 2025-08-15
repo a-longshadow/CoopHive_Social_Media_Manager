@@ -170,6 +170,15 @@ Original comprehensive plan for Twitter/X-Bot integration (now implemented).
 - **Platform Apps Guide**: New comprehensive guide for all platform integrations
 - **Twitter Integration Guide**: New complete integration documentation
 
+### 🚨 CRITICAL SAFETY DOCUMENTATION
+
+#### [Safe Commit Guide](SAFE_COMMIT_GUIDE.md)
+**🛡️ MANDATORY READING**: Complete guide to prevent accidental file deletion during git operations.
+- **Pre-Commit Checklist**: Essential steps before every commit
+- **Protection Systems**: Pre-commit hooks, integrity verification, safe git commands
+- **Emergency Recovery**: How to restore accidentally deleted files
+- **Red Flags**: Warning signs to watch for during commits
+
 ### 📝 Needs Updates
 - **Configuration Guide**: Should be updated with latest settings and features
 - **Forms Documentation**: Could be enhanced with more platform-specific examples
@@ -187,6 +196,7 @@ When updating documentation:
 
 ## Getting Help
 
+- **🚨 Git/Commit Issues**: **FIRST READ** [Safe Commit Guide](SAFE_COMMIT_GUIDE.md) - Prevents file deletion
 - **Development Issues**: Check [Development Guide](development.md) and [Testing Guide](testing.md)
 - **Deployment Problems**: Review [Deployment Guide](deployment.md) and [Configuration Guide](configuration.md)  
 - **Authentication Issues**: See [Super Admin Setup](super_admin_setup.md) and [OAuth Success Report](oauth_success_report.md)
