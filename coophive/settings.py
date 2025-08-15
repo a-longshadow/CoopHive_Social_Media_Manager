@@ -86,12 +86,10 @@ INSTALLED_APPS = [
     'bluesky.apps.BlueskyConfig',
 ]
 
-# Email configuration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
-DEFAULT_FROM_EMAIL = 'noreply@coophive.network'
+# Email configuration - will be overridden below with database-first backend
 
 # Authentication settings
-LOGIN_URL = 'user_account_manager:login'
+LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
@@ -205,9 +203,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication Settings
 AUTHENTICATION_BACKENDS = [
-    # Needed to login by username in Django admin, regardless of `allauth`
+    # Custom backend for email/username login
+    'user_account_manager.backends.EmailOrUsernameModelBackend',
+    # Django default (for admin)
     'django.contrib.auth.backends.ModelBackend',
-    # `allauth` specific authentication methods, such as login by e-mail
+    # Allauth backend (for social login)
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
@@ -216,13 +216,20 @@ SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+# Use custom adapter for Google OAuth with domain restrictions
+SOCIALACCOUNT_ADAPTER = 'user_account_manager.adapters.CustomSocialAccountAdapter'
+
+# Allauth social account settings
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_REQUIRED = False  # Don't require email confirmation
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"  # Skip ALL email verification
+SOCIALACCOUNT_LOGIN_ON_GET = True  # Direct login without confirmation page
+SOCIALACCOUNT_SIGNUP_FORM_CLASS = None  # No signup form
+SOCIALACCOUNT_FORMS = {}  # No custom forms
+
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
-        'APP': {
-            'client_id': os.getenv('GOOGLE_OAUTH_CLIENT_ID', ''),
-            'secret': os.getenv('GOOGLE_OAUTH_CLIENT_SECRET', ''),
-            'key': ''  # Not used for Google OAuth
-        },
+        # No APP config - allauth will use SocialApp from database
         'SCOPE': [
             'profile',
             'email',
@@ -230,19 +237,24 @@ SOCIALACCOUNT_PROVIDERS = {
         'AUTH_PARAMS': {
             'access_type': 'online',
         },
-        'OAUTH_PKCE_ENABLED': True,
-        'VERIFIED_EMAIL': True
+        'OAUTH_PKCE_ENABLED': False,  # Disable PKCE to fix token issues
+        'FETCH_USERINFO': True,
+        'VERIFIED_EMAIL': True,  # Trust Google's email verification
     }
 }
 
-# Email Settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Email Settings - Database-first with environment fallback
+# Use custom backend that loads settings dynamically at runtime
+EMAIL_BACKEND = 'user_account_manager.email_backend.DatabaseFirstEmailBackend'
+
+# Fallback settings for when custom backend can't load from database
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'True').lower() == 'true'
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() == 'true'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@coophive.network')
 
 # Domain restriction settings for coophive.network
 COOPHIVE_DOMAIN_RESTRICTION = {

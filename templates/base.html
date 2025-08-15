@@ -1,57 +1,530 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}CoopHive Social Media Manager{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'coophive_logo.svg' %}" />
     
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Toastify for modern notifications -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    
+    <style>
+        /* Modern Navigation Styling */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;  /* Increased padding to accommodate larger elements */
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 50;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            min-height: 90px;  /* Ensure navbar has enough height for 60px logo */
+        }
+        .nav-left img, .nav-left svg {
+            height: 60px;
+            vertical-align: middle;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .nav-links a {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #374151;
+            text-decoration: none;
+            transition: color .3s;
+        }
+        .nav-links a:hover {
+            color: #111827;
+        }
+        .nav-links a.logout {
+            color: #ef4444;
+        }
+        .user-profile {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;  /* Increased gap for larger elements */
+            padding: 8px 16px;  /* Increased padding */
+            border-radius: 8px;
+            background: rgba(255,255,255,0.5);
+            border: 1px solid rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .user-profile:hover {
+            background: rgba(255,255,255,0.8);
+            border-color: rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            min-width: 200px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.1);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .user-profile.active .profile-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .profile-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        .profile-header .user-avatar {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 8px;
+            font-size: 20px;
+        }
+        .profile-header .profile-name {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        .profile-header .profile-email {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        .profile-menu {
+            padding: 8px 0;
+        }
+        .profile-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #374151;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+        .profile-menu a:hover {
+            background: rgba(0,0,0,0.05);
+        }
+        .profile-menu a.logout-link {
+            color: #ef4444;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+        .profile-menu a.logout-link:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        .profile-arrow {
+            margin-left: 8px;
+            transition: transform 0.3s ease;
+        }
+        .user-profile.active .profile-arrow {
+            transform: rotate(180deg);
+        }
+        .user-profile img {
+            width: 37px;  /* Enlarged by one third: 28px * 1.33 ≈ 37px */
+            height: 37px;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .user-avatar {
+            width: 37px;  /* Enlarged by one third: 28px * 1.33 ≈ 37px */
+            height: 37px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;  /* Doubled from 12px to 16px */
+        }
+        .user-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        /* Modern Footer Styling */
+        .modern-footer {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(0,0,0,0.05);
+            margin-top: auto;
+        }
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .footer-links {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color .3s;
+        }
+        .footer-links a:hover {
+            color: #374151;
+        }
+        .footer-copyright {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        
+        /* Body styling - TaskForge inspired */
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #F5F7FB;
+            color: #374151;
+        }
+    </style>
+    
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-gray-100">
-    <!-- Navigation -->
-    <nav class="bg-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <div class="flex-shrink-0 flex items-center">
-                        <a href="/" class="text-xl font-bold text-indigo-600">CoopHive</a>
-                    </div>
-                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                        <a href="{% url 'admin:index' %}" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">Admin</a>
-                        <!-- Add more navigation items here -->
+<body>
+    <!-- Modern Navigation -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="/"><img src="{% static 'coophive_logo.svg' %}" alt="CoopHive logo"></a>
+        </div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            {% if user.is_authenticated %}
+                <!-- Social Media Platform Links -->
+                <a href="/twitter/">Twitter</a>
+                <a href="/linkedin/">LinkedIn</a>
+                <a href="/farcaster/">Farcaster</a>
+                <a href="/bluesky/">Bluesky</a>
+                {% if user.is_superuser %}
+                    <a href="{% url 'admin:index' %}">Admin</a>
+                {% endif %}
+
+                <!-- User Profile Dropdown -->
+                <div class="user-profile" onclick="toggleProfileDropdown(event)">
+                    <!-- Profile Picture -->
+                    {% with google_account=user.socialaccount_set.all.0 %}
+                        {% if google_account.provider == 'google' and google_account.extra_data.picture %}
+                            <img src="{{ google_account.extra_data.picture }}"
+                                 alt="Profile"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="user-avatar" style="display:none;">
+                                {{ user.first_name|first|default:user.username|first|upper }}
+                            </div>
+                        {% else %}
+                            <div class="user-avatar">
+                                {{ user.first_name|first|default:user.username|first|upper }}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- User Name -->
+                    <span class="user-name">
+                        {% if user.get_full_name %}
+                            {{ user.get_full_name|truncatechars:15 }}
+                        {% else %}
+                            {{ user.username|truncatechars:12 }}
+                        {% endif %}
+                    </span>
+                    
+                    <!-- Dropdown Arrow -->
+                    <svg class="profile-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+
+                    <!-- Dropdown Menu -->
+                    <div class="profile-dropdown">
+                        <div class="profile-header">
+                            {% with google_account=user.socialaccount_set.all.0 %}
+                                {% if google_account.provider == 'google' and google_account.extra_data.picture %}
+                                    <img src="{{ google_account.extra_data.picture }}"
+                                         alt="Profile"
+                                         class="user-avatar"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="user-avatar" style="display:none;">
+                                        {{ user.first_name|first|default:user.username|first|upper }}
+                                    </div>
+                                {% else %}
+                                    <div class="user-avatar">
+                                        {{ user.first_name|first|default:user.username|first|upper }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                            <div class="profile-name">
+                                {% if user.get_full_name %}
+                                    {{ user.get_full_name }}
+                                {% else %}
+                                    {{ user.username }}
+                                {% endif %}
+                            </div>
+                            <div class="profile-email">{{ user.email }}</div>
+                        </div>
+                        <div class="profile-menu">
+                            {% if user.is_superuser %}
+                                <a href="{% url 'admin:index' %}">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <path d="M8 1L10.5 6H15L11.5 9L13 14L8 11L3 14L4.5 9L1 6H5.5L8 1Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                    </svg>
+                                    Admin Panel
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'accounts:reset' %}">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M11 5V3.5C11 2.11929 9.88071 1 8.5 1H7.5C6.11929 1 5 2.11929 5 3.5V5M3 5H13C13.5523 5 14 5.44772 14 6V13C14 13.5523 13.5523 14 13 14H3C2.44772 14 2 13.5523 2 13V6C2 5.44772 2.44772 5 3 5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                </svg>
+                                Change Password
+                            </a>
+                            <a href="{% url 'accounts:logout' %}" class="logout-link" onclick="logProfileAction('logout_clicked')">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <path d="M6 14H3C2.44772 14 2 13.5523 2 13V3C2 2.44772 2.44772 2 3 2H6M11 11L14 8L11 5M14 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Log out
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
+            {% else %}
+                <a href="{% url 'accounts:register' %}">Register</a>
+                <a href="{% url 'accounts:login' %}">Log&nbsp;in</a>
+            {% endif %}
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {% if messages %}
-        <div class="messages mb-4">
-            {% for message in messages %}
-            <div class="bg-{{ message.tags }}-100 border border-{{ message.tags }}-400 text-{{ message.tags }}-700 px-4 py-3 rounded relative" role="alert">
-                <span class="block sm:inline">{{ message }}</span>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
+    <main class="max-w-5xl mx-auto py-24 px-4">
         {% block content %}
         {% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white shadow-lg mt-8">
-        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-            <p class="text-center text-gray-500 text-sm">
+    <!-- Modern Footer -->
+    <footer class="modern-footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="/">Home</a>
+                {% if user.is_superuser %}
+                    <a href="{% url 'admin:index' %}">Admin</a>
+                {% endif %}
+            </div>
+            <div class="footer-copyright">
                 © {% now "Y" %} CoopHive Social Media Manager. All rights reserved.
-            </p>
+            </div>
         </div>
     </footer>
+
+    <!-- Django Messages with Toastify -->
+    {% if messages %}
+      <script id="django-messages" type="application/json">
+      [
+        {% for message in messages %}{
+          "text": "{{ message|escapejs }}",
+          "level": "{{ message.tags }}"
+        }{% if not forloop.last %},{% endif %}{% endfor %}
+      ]
+      </script>
+      <script>
+        const palette = {
+          success: "linear-gradient(to right,#15803d,#22c55e)",
+          error: "linear-gradient(to right,#b91c1c,#ef4444)",
+          warning: "linear-gradient(to right,#ca8a04,#facc15)",
+          info: "linear-gradient(to right,#1d4ed8,#60a5fa)"
+        };
+        (function(){
+          const dataEl = document.getElementById("django-messages");
+          if (!dataEl) return;
+          const msgs = JSON.parse(dataEl.textContent || "[]").reverse(); // newest first
+          let offsetY = 70;
+          const MAX_ON_SCREEN = 3;
+          msgs.slice(0, MAX_ON_SCREEN).forEach((m) => {
+            const level = (m.level || "info").split(" ")[0];
+            Toastify({
+              text: m.text,
+              duration: 4000,
+              gravity: "top",
+              position: "center",
+              stopOnFocus: true,
+              close: true,
+              offset: { x: 0, y: offsetY },
+              style: { background: palette[level] || palette.info }
+            }).showToast();
+            offsetY += 60;
+          });
+        })();
+      </script>
+    {% endif %}
+
+    <!-- Profile Dropdown JavaScript with Logging -->
+    <script>
+        // Profile dropdown functionality with best practices and logging
+        function toggleProfileDropdown(event) {
+            event.stopPropagation();
+            const profileElement = event.currentTarget;
+            const isActive = profileElement.classList.contains('active');
+            
+            // Close any other open dropdowns
+            document.querySelectorAll('.user-profile.active').forEach(el => {
+                if (el !== profileElement) {
+                    el.classList.remove('active');
+                }
+            });
+            
+            // Toggle current dropdown
+            profileElement.classList.toggle('active');
+            
+            // Log the action
+            const action = profileElement.classList.contains('active') ? 'opened' : 'closed';
+            logProfileAction(`profile_dropdown_${action}`);
+            
+            // Accessibility: Focus management
+            if (profileElement.classList.contains('active')) {
+                const firstMenuItem = profileElement.querySelector('.profile-menu a');
+                if (firstMenuItem) {
+                    setTimeout(() => firstMenuItem.focus(), 100);
+                }
+            }
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const activeProfiles = document.querySelectorAll('.user-profile.active');
+            activeProfiles.forEach(profile => {
+                if (!profile.contains(event.target)) {
+                    profile.classList.remove('active');
+                    logProfileAction('profile_dropdown_closed_outside_click');
+                }
+            });
+        });
+        
+        // Close dropdown on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const activeProfiles = document.querySelectorAll('.user-profile.active');
+                activeProfiles.forEach(profile => {
+                    profile.classList.remove('active');
+                    logProfileAction('profile_dropdown_closed_escape');
+                });
+            }
+        });
+        
+        // Comprehensive logging function with best practices
+        function logProfileAction(action, additionalData = {}) {
+            const logData = {
+                action: action,
+                timestamp: new Date().toISOString(),
+                user_agent: navigator.userAgent,
+                url: window.location.href,
+                screen_resolution: `${screen.width}x${screen.height}`,
+                viewport_size: `${window.innerWidth}x${window.innerHeight}`,
+                ...additionalData
+            };
+            
+            // Console logging for development
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('Profile Action:', logData);
+            }
+            
+            // Send to analytics/logging service (implement as needed)
+            try {
+                // Example: Send to your analytics endpoint
+                // fetch('/api/analytics/log/', {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //         'X-CSRFToken': getCsrfToken()
+                //     },
+                //     body: JSON.stringify(logData)
+                // }).catch(err => console.warn('Analytics logging failed:', err));
+                
+                // Local storage for offline analytics
+                const logs = JSON.parse(localStorage.getItem('profile_logs') || '[]');
+                logs.push(logData);
+                
+                // Keep only last 100 logs to prevent storage bloat
+                if (logs.length > 100) {
+                    logs.splice(0, logs.length - 100);
+                }
+                
+                localStorage.setItem('profile_logs', JSON.stringify(logs));
+                
+            } catch (error) {
+                console.warn('Logging failed:', error);
+            }
+        }
+        
+        // CSRF token helper for AJAX requests
+        function getCsrfToken() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrftoken') {
+                    return value;
+                }
+            }
+            return '';
+        }
+        
+        // Performance monitoring
+        function logPerformanceMetrics() {
+            if (window.performance && window.performance.timing) {
+                const timing = window.performance.timing;
+                const loadTime = timing.loadEventEnd - timing.navigationStart;
+                
+                logProfileAction('page_performance', {
+                    load_time_ms: loadTime,
+                    dom_ready_time: timing.domContentLoadedEventEnd - timing.navigationStart,
+                    first_paint: timing.responseStart - timing.navigationStart
+                });
+            }
+        }
+        
+        // Initialize logging when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            logProfileAction('page_loaded');
+            
+            // Log performance metrics after page fully loads
+            window.addEventListener('load', logPerformanceMetrics);
+            
+            // Log page visibility changes
+            document.addEventListener('visibilitychange', function() {
+                logProfileAction(document.hidden ? 'page_hidden' : 'page_visible');
+            });
+        });
+        
+        // Log before page unload
+        window.addEventListener('beforeunload', function() {
+            logProfileAction('page_unload');
+        });
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>

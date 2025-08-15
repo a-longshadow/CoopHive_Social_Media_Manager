@@ -1,0 +1,1440 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .campaign-overview {
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    @media (max-width: 768px) {
+        .campaign-overview {
+            padding: 1rem;
+        }
+    }
+    .overview-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    @media (max-width: 768px) {
+        .overview-stats {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    @media (max-width: 480px) {
+        .overview-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    .stat-card {
+        text-align: center;
+        padding: 1rem;
+        background: #F8F9FA;
+        border-radius: 0.5rem;
+    }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1da1f2;
+    }
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6B7280;
+        text-transform: uppercase;
+    }
+    .content-strategy {
+        background: #FEF3C7;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    .bulk-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    @media (max-width: 768px) {
+        .bulk-actions {
+            flex-direction: column;
+        }
+        .bulk-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    .tweet-card {
+        background: rgba(255,255,255,0.98);
+        border: 1px solid #E1E8ED;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    @media (max-width: 768px) {
+        .tweet-card {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    }
+    .tweet-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .tweet-id {
+        background: #3B82F6;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .brand-aligned-badge {
+        background: #10B981;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .tweet-content {
+        width: 100%;
+        background: #F8F9FA;
+        border: 3px solid #1DA1F2;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        font-size: 1.125rem;
+        line-height: 1.4;
+        min-height: 120px;
+        resize: vertical;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .tweet-content:focus {
+        outline: none;
+        border-color: #0EA5E9;
+        background: white;
+    }
+    .tweet-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    @media (max-width: 768px) {
+        .tweet-meta {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 480px) {
+        .tweet-meta {
+            grid-template-columns: 1fr;
+        }
+    }
+    .meta-item {
+        background: #F8F9FA;
+        padding: 0.75rem;
+        border-radius: 0.375rem;
+    }
+    .meta-label {
+        font-weight: 600;
+        color: #1da1f2;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+    .meta-value {
+        font-size: 0.875rem;
+        color: #374151;
+    }
+    .tweet-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    @media (max-width: 768px) {
+        .tweet-actions {
+            flex-direction: column;
+        }
+        .tweet-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .btn-save {
+        background: #3B82F6;
+        color: white;
+    }
+    .btn-save:hover {
+        background: #2563EB;
+    }
+    .btn-approve {
+        background: #10B981;
+        color: white;
+    }
+    .btn-approve:hover {
+        background: #059669;
+    }
+    .btn-post {
+        background: #F59E0B;
+        color: white;
+    }
+    .btn-post:hover {
+        background: #D97706;
+    }
+    .btn-reject {
+        background: #EF4444;
+        color: white;
+    }
+    .btn-reject:hover {
+        background: #DC2626;
+    }
+    .btn-delete {
+        background: #6B7280;
+        color: white;
+    }
+    .btn-delete:hover {
+        background: #4B5563;
+    }
+    .btn-preview {
+        background: #8B5CF6;
+        color: white;
+    }
+    .btn-preview:hover {
+        background: #7C3AED;
+    }
+    
+    /* X.com Tweet Preview Modal */
+    .x-tweet-preview {
+        background: #000;
+        color: #fff;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        max-width: 600px;
+        margin: 0 auto;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .x-tweet-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    .x-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1da1f2, #0d8bd9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 0.75rem;
+        flex-shrink: 0;
+    }
+    .x-user-info {
+        flex: 1;
+    }
+    .x-display-name {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #fff;
+    }
+    .x-username {
+        color: #71767B;
+        font-size: 0.9rem;
+    }
+    .x-tweet-content {
+        font-size: 1.25rem;
+        line-height: 1.5;
+        margin-bottom: 0.75rem;
+        color: #fff;
+        white-space: pre-wrap;
+    }
+    .x-tweet-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.75rem;
+        border-top: 1px solid #2F3336;
+        margin-top: 0.75rem;
+    }
+    .x-engagement-stats {
+        display: flex;
+        gap: 1.5rem;
+        color: #71767B;
+        font-size: 0.875rem;
+    }
+    .x-timestamp {
+        color: #71767B;
+        font-size: 0.875rem;
+    }
+    .x-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.75rem;
+    }
+    .x-action-btn {
+        background: none;
+        border: none;
+        color: #71767B;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 50%;
+        transition: all 0.2s;
+        font-size: 1.125rem;
+    }
+    .x-action-btn:hover {
+        background: rgba(29, 161, 242, 0.1);
+        color: #1da1f2;
+    }
+    
+    /* Drag and Drop Styles */
+    .tweet-container {
+        position: relative;
+    }
+    .tweet-card {
+        transition: all 0.3s ease;
+        cursor: move;
+    }
+    .tweet-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    .tweet-card.dragging {
+        opacity: 0.5;
+        transform: rotate(2deg);
+        z-index: 1000;
+    }
+    .tweet-card.drag-over {
+        border-top: 3px solid #1da1f2;
+        margin-top: 1rem;
+    }
+    .drag-handle {
+        position: absolute;
+        left: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        cursor: grab;
+        font-size: 1.25rem;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .tweet-card:hover .drag-handle {
+        opacity: 1;
+    }
+    .drag-handle:active {
+        cursor: grabbing;
+    }
+    .drag-placeholder {
+        height: 2px;
+        background: #1da1f2;
+        border-radius: 1px;
+        margin: 0.5rem 0;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .drag-placeholder.active {
+        opacity: 1;
+    }
+    .btn-bulk {
+        background: #10B981;
+        color: white;
+        padding: 0.75rem 1.5rem;
+    }
+    .btn-bulk:hover {
+        background: #059669;
+    }
+    .btn-bulk-save {
+        background: #3B82F6;
+        color: white;
+        padding: 0.75rem 1.5rem;
+    }
+    .btn-bulk-save:hover {
+        background: #2563EB;
+    }
+    .btn-preview {
+        background: #8B5CF6;
+        color: white;
+        padding: 0.75rem 1.5rem;
+    }
+    .btn-preview:hover {
+        background: #7C3AED;
+    }
+    .character-count {
+        font-size: 0.875rem;
+        color: #6B7280;
+        text-align: right;
+        margin-top: 0.5rem;
+    }
+    .character-count.over-limit {
+        color: #EF4444;
+        font-weight: 600;
+    }
+    .page-header {
+        background: linear-gradient(135deg, #1da1f2, #0d8bd9);
+        color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8" style="max-width: 1200px;">
+<style>
+    @media (max-width: 768px) {
+        .container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+    }
+</style>
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="text-3xl font-bold mb-2">{{ campaign_batch.title }}</h1>
+        <p class="opacity-90">Campaign: {{ campaign_batch.batch_id }}</p>
+    </div>
+
+    <!-- Campaign Overview -->
+    <div class="campaign-overview">
+        <h3 class="text-lg font-bold mb-4">📊 Campaign Overview</h3>
+        
+        <!-- Statistics -->
+        <div class="overview-stats">
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.total_tweets }}</div>
+                <div class="stat-label">Total Tweets</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.draft }}</div>
+                <div class="stat-label">Draft</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.approved }}</div>
+                <div class="stat-label">Approved</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.posted }}</div>
+                <div class="stat-label">Posted</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.rejected }}</div>
+                <div class="stat-label">Rejected</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.deleted }}</div>
+                <div class="stat-label">Deleted</div>
+            </div>
+        </div>
+
+        <!-- Action Tracking Notice -->
+        <div style="background: #E0F2FE; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+            <strong>Action Tracking:</strong> Watch for action indicators 🔄🔄🔄 next to each tweet's status when you make changes and auto-hide after 5 seconds.
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bulk-actions">
+            <button class="btn btn-bulk" onclick="approveAll()">✅ Approve All</button>
+            <button class="btn btn-bulk-save" onclick="saveAllChanges()">💾 Save All Changes</button>
+            <button class="btn btn-preview" onclick="previewMode()">👁️ Preview Mode</button>
+        </div>
+
+        <!-- Content Strategy -->
+        <div class="content-strategy">
+            <h4 class="font-bold mb-2">🎯 Content Strategy</h4>
+            <p><strong>Themes:</strong> {{ campaign_batch.analysis_summary.dominant_themes|join:", "|default:"brand_alignment, cyber_architect, agent_first" }}</p>
+            <p><strong>Strategy:</strong> {{ campaign_batch.analysis_summary.content_strategy|default:"Multi-agent brand alignment with Cyber Architect voice" }}</p>
+            <p><strong>Batch Size:</strong> {{ campaign_batch.total_tweets }} tweets processed</p>
+            {% if campaign_batch.brand_alignment_score %}
+            <p><strong>Top Score:</strong> {{ campaign_batch.brand_alignment_score }}/10</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Individual Tweet Cards -->
+    <div id="tweetContainer" class="tweet-container">
+    {% for tweet in tweets %}
+    <div class="tweet-card" data-tweet-id="{{ tweet.tweet_id }}" data-db-id="{{ tweet.id }}" draggable="true">
+        <!-- Drag Handle -->
+        <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
+        
+        <!-- Tweet Header -->
+        <div class="tweet-header">
+            <div class="tweet-id">{{ tweet.tweet_id }}</div>
+            <div class="brand-aligned-badge">{{ tweet.status|upper }}</div>
+        </div>
+
+        <!-- Tweet Content (Editable) -->
+        <textarea class="tweet-content" 
+                  id="content-{{ tweet.id }}" 
+                  onInput="updateCharacterCount({{ tweet.id }})"
+                  placeholder="Edit tweet content here...">{{ tweet.content }}</textarea>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div class="character-count" id="char-count-{{ tweet.id }}">
+                {{ tweet.character_count }}/280
+            </div>
+            <div class="undo-redo-controls">
+                <button id="undo-{{ tweet.id }}" class="btn btn-sm btn-secondary" onclick="undo({{ tweet.id }})" title="Undo (Ctrl+Z)" disabled style="opacity: 0.5;">↶ Undo</button>
+                <button id="redo-{{ tweet.id }}" class="btn btn-sm btn-secondary" onclick="redo({{ tweet.id }})" title="Redo (Ctrl+Y)" disabled style="opacity: 0.5;">↷ Redo</button>
+            </div>
+        </div>
+
+        <!-- Tweet Metadata -->
+        <div class="tweet-meta">
+            <div class="meta-item">
+                <div class="meta-label">Character Count</div>
+                <div class="meta-value">{{ tweet.character_count }}/280</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">CTA</div>
+                <div class="meta-value">{{ tweet.engagement_hook|truncatechars:30 }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">CoopHive Elements</div>
+                <div class="meta-value">{{ tweet.coophive_elements|join:", "|truncatechars:30 }}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Discord Voice Patterns</div>
+                <div class="meta-value">{{ tweet.discord_voice_patterns|join:", "|truncatechars:30 }}</div>
+            </div>
+        </div>
+
+        <!-- Tweet Actions -->
+        <div class="tweet-actions">
+            <button class="btn btn-preview" onclick="previewTweet({{ tweet.id }})">👁️ Preview</button>
+            <button class="btn btn-save" onclick="saveTweet({{ tweet.id }})">💾 Save Changes</button>
+            <button class="btn btn-approve" onclick="approveTweet({{ tweet.id }})">✅ Approve</button>
+            <button class="btn btn-post" onclick="postTweet({{ tweet.id }})">🚀 Post to X.com</button>
+            <button class="btn btn-reject" onclick="rejectTweet({{ tweet.id }})">❌ Reject</button>
+            <button class="btn btn-delete" onclick="deleteTweet({{ tweet.id }})">🗑️ Delete</button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-8">
+        <p class="text-gray-500">No tweets found in this campaign batch.</p>
+    </div>
+    {% endfor %}
+    </div>
+</div>
+
+<!-- Tweet Preview Modal -->
+<div id="tweetPreviewModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 700px; background: transparent; box-shadow: none;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #1da1f2, #0d8bd9);">
+            <h2>🐦 Tweet Preview</h2>
+            <span class="close" onclick="closeTweetPreview()">&times;</span>
+        </div>
+        <div class="modal-body" style="padding: 0; background: #000; border-radius: 0 0 1rem 1rem;">
+            <div id="tweetPreviewContent" class="x-tweet-preview">
+                <!-- Preview content will be inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Character count tracking with auto-save and history
+function updateCharacterCount(tweetId) {
+    const textarea = document.getElementById(`content-${tweetId}`);
+    const counter = document.getElementById(`char-count-${tweetId}`);
+    const count = textarea.value.length;
+    
+    counter.textContent = `${count}/280`;
+    
+    if (count > 280) {
+        counter.classList.add('over-limit');
+    } else {
+        counter.classList.remove('over-limit');
+    }
+    
+    // Add to history for undo/redo (with debouncing)
+    addToHistory(tweetId, textarea.value);
+    
+    // Trigger auto-save
+    scheduleAutoSave(tweetId);
+}
+
+// Undo/Redo History Management
+function addToHistory(tweetId, content) {
+    // Initialize stacks if they don't exist
+    if (!undoStacks[tweetId]) {
+        undoStacks[tweetId] = [];
+        redoStacks[tweetId] = [];
+    }
+    
+    // Don't add if content is the same as the last entry
+    const lastEntry = undoStacks[tweetId][undoStacks[tweetId].length - 1];
+    if (lastEntry && lastEntry.content === content) {
+        return;
+    }
+    
+    // Add current state to undo stack
+    undoStacks[tweetId].push({
+        content: content,
+        timestamp: Date.now()
+    });
+    
+    // Limit history size
+    if (undoStacks[tweetId].length > maxHistorySize) {
+        undoStacks[tweetId].shift();
+    }
+    
+    // Clear redo stack when new content is added
+    redoStacks[tweetId] = [];
+    
+    // Update undo/redo button states
+    updateUndoRedoButtons(tweetId);
+}
+
+function undo(tweetId) {
+    if (!undoStacks[tweetId] || undoStacks[tweetId].length <= 1) {
+        return;
+    }
+    
+    const textarea = document.getElementById(`content-${tweetId}`);
+    const currentContent = textarea.value;
+    
+    // Move current state to redo stack
+    redoStacks[tweetId].push({
+        content: currentContent,
+        timestamp: Date.now()
+    });
+    
+    // Remove current state from undo stack
+    undoStacks[tweetId].pop();
+    
+    // Get previous state
+    const previousState = undoStacks[tweetId][undoStacks[tweetId].length - 1];
+    
+    if (previousState) {
+        // Temporarily disable history tracking
+        const originalHandler = textarea.oninput;
+        textarea.oninput = null;
+        
+        // Set content
+        textarea.value = previousState.content;
+        
+        // Update character count without triggering history
+        const counter = document.getElementById(`char-count-${tweetId}`);
+        const count = textarea.value.length;
+        counter.textContent = `${count}/280`;
+        
+        if (count > 280) {
+            counter.classList.add('over-limit');
+        } else {
+            counter.classList.remove('over-limit');
+        }
+        
+        // Re-enable history tracking
+        setTimeout(() => {
+            textarea.oninput = originalHandler;
+        }, 100);
+        
+        // Show feedback
+        showUndoRedoFeedback(tweetId, 'Undo');
+    }
+    
+    updateUndoRedoButtons(tweetId);
+}
+
+function redo(tweetId) {
+    if (!redoStacks[tweetId] || redoStacks[tweetId].length === 0) {
+        return;
+    }
+    
+    const textarea = document.getElementById(`content-${tweetId}`);
+    const currentContent = textarea.value;
+    
+    // Move current state to undo stack
+    undoStacks[tweetId].push({
+        content: currentContent,
+        timestamp: Date.now()
+    });
+    
+    // Get next state from redo stack
+    const nextState = redoStacks[tweetId].pop();
+    
+    if (nextState) {
+        // Temporarily disable history tracking
+        const originalHandler = textarea.oninput;
+        textarea.oninput = null;
+        
+        // Set content
+        textarea.value = nextState.content;
+        
+        // Update character count without triggering history
+        const counter = document.getElementById(`char-count-${tweetId}`);
+        const count = textarea.value.length;
+        counter.textContent = `${count}/280`;
+        
+        if (count > 280) {
+            counter.classList.add('over-limit');
+        } else {
+            counter.classList.remove('over-limit');
+        }
+        
+        // Re-enable history tracking
+        setTimeout(() => {
+            textarea.oninput = originalHandler;
+        }, 100);
+        
+        // Show feedback
+        showUndoRedoFeedback(tweetId, 'Redo');
+    }
+    
+    updateUndoRedoButtons(tweetId);
+}
+
+function updateUndoRedoButtons(tweetId) {
+    const undoBtn = document.getElementById(`undo-${tweetId}`);
+    const redoBtn = document.getElementById(`redo-${tweetId}`);
+    
+    if (undoBtn) {
+        const canUndo = undoStacks[tweetId] && undoStacks[tweetId].length > 1;
+        undoBtn.disabled = !canUndo;
+        undoBtn.style.opacity = canUndo ? '1' : '0.5';
+    }
+    
+    if (redoBtn) {
+        const canRedo = redoStacks[tweetId] && redoStacks[tweetId].length > 0;
+        redoBtn.disabled = !canRedo;
+        redoBtn.style.opacity = canRedo ? '1' : '0.5';
+    }
+}
+
+function showUndoRedoFeedback(tweetId, action) {
+    const tweetCard = document.getElementById(`content-${tweetId}`).closest('.tweet-card');
+    if (!tweetCard) return;
+    
+    // Remove existing feedback
+    const existingFeedback = tweetCard.querySelector('.undo-redo-feedback');
+    if (existingFeedback) {
+        existingFeedback.remove();
+    }
+    
+    // Create feedback
+    const feedback = document.createElement('div');
+    feedback.className = 'undo-redo-feedback';
+    feedback.style.cssText = `
+        position: absolute;
+        top: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #3B82F6;
+        color: white;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        z-index: 10;
+        opacity: 0.9;
+        transition: opacity 0.3s ease;
+    `;
+    feedback.textContent = `${action} ↩️`;
+    
+    tweetCard.style.position = 'relative';
+    tweetCard.appendChild(feedback);
+    
+    // Auto-hide after 2 seconds
+    setTimeout(() => {
+        feedback.style.opacity = '0';
+        setTimeout(() => {
+            feedback.remove();
+        }, 300);
+    }, 2000);
+}
+
+// Auto-save functionality
+let autoSaveTimers = {};
+let lastSavedContent = {};
+
+// Undo/Redo functionality
+let undoStacks = {};
+let redoStacks = {};
+const maxHistorySize = 50;
+
+function scheduleAutoSave(tweetId) {
+    // Clear existing timer for this tweet
+    if (autoSaveTimers[tweetId]) {
+        clearTimeout(autoSaveTimers[tweetId]);
+    }
+    
+    // Set new timer for 3 seconds after last edit
+    autoSaveTimers[tweetId] = setTimeout(() => {
+        autoSaveTweet(tweetId);
+    }, 3000);
+}
+
+function autoSaveTweet(tweetId) {
+    const content = document.getElementById(`content-${tweetId}`).value;
+    
+    // Don't save if content hasn't changed
+    if (lastSavedContent[tweetId] === content) {
+        return;
+    }
+    
+    // Don't auto-save empty content
+    if (!content.trim()) {
+        return;
+    }
+    
+    // Show auto-save indicator
+    showAutoSaveIndicator(tweetId, 'Saving...');
+    
+    fetch(`/twitter/api/save-generated-tweet/${tweetId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ content: content })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            lastSavedContent[tweetId] = content;
+            showAutoSaveIndicator(tweetId, 'Auto-saved ✓');
+            
+            // Update character count from server response
+            const charCount = document.getElementById(`char-count-${tweetId}`);
+            charCount.textContent = `${data.character_count}/280`;
+        } else {
+            showAutoSaveIndicator(tweetId, 'Save failed ✗', true);
+        }
+    })
+    .catch(error => {
+        showAutoSaveIndicator(tweetId, 'Save failed ✗', true);
+    });
+}
+
+function showAutoSaveIndicator(tweetId, message, isError = false) {
+    const tweetCard = document.getElementById(`content-${tweetId}`).closest('.tweet-card');
+    if (!tweetCard) return;
+    
+    // Remove existing indicator
+    const existingIndicator = tweetCard.querySelector('.auto-save-indicator');
+    if (existingIndicator) {
+        existingIndicator.remove();
+    }
+    
+    // Create new indicator
+    const indicator = document.createElement('div');
+    indicator.className = 'auto-save-indicator';
+    indicator.style.cssText = `
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: ${isError ? '#EF4444' : '#10B981'};
+        color: white;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        z-index: 10;
+        opacity: 0.9;
+        transition: opacity 0.3s ease;
+    `;
+    indicator.textContent = message;
+    
+    // Make tweet card position relative if not already
+    tweetCard.style.position = 'relative';
+    tweetCard.appendChild(indicator);
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+        indicator.style.opacity = '0';
+        setTimeout(() => {
+            indicator.remove();
+        }, 300);
+    }, 3000);
+}
+
+// Initialize auto-save and undo/redo for existing content
+document.addEventListener('DOMContentLoaded', function() {
+    const textareas = document.querySelectorAll('.tweet-content');
+    textareas.forEach(textarea => {
+        const tweetId = textarea.id.split('-')[1];
+        lastSavedContent[tweetId] = textarea.value;
+        
+        // Initialize undo/redo history with current content
+        addToHistory(tweetId, textarea.value);
+        updateUndoRedoButtons(tweetId);
+        
+        // Add keyboard shortcuts
+        textarea.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey)) {
+                if (e.key === 'z' && !e.shiftKey) {
+                    e.preventDefault();
+                    undo(tweetId);
+                } else if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
+                    e.preventDefault();
+                    redo(tweetId);
+                }
+            }
+        });
+    });
+    
+    // Initialize drag and drop
+    initializeDragAndDrop();
+});
+
+// Drag and Drop Functionality
+let draggedElement = null;
+let dragOverElement = null;
+
+function initializeDragAndDrop() {
+    const tweetCards = document.querySelectorAll('.tweet-card');
+    
+    tweetCards.forEach(card => {
+        // Drag start
+        card.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        });
+        
+        // Drag end
+        card.addEventListener('dragend', function(e) {
+            this.classList.remove('dragging');
+            // Remove all drag-over classes
+            document.querySelectorAll('.tweet-card').forEach(c => {
+                c.classList.remove('drag-over');
+            });
+            draggedElement = null;
+            dragOverElement = null;
+        });
+        
+        // Drag over
+        card.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (this !== draggedElement) {
+                // Remove drag-over from all cards
+                document.querySelectorAll('.tweet-card').forEach(c => {
+                    c.classList.remove('drag-over');
+                });
+                
+                // Add drag-over to current card
+                this.classList.add('drag-over');
+                dragOverElement = this;
+            }
+        });
+        
+        // Drag enter
+        card.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+        });
+        
+        // Drop
+        card.addEventListener('drop', function(e) {
+            e.preventDefault();
+            
+            if (this !== draggedElement) {
+                // Get container
+                const container = document.getElementById('tweetContainer');
+                
+                // Determine drop position
+                const rect = this.getBoundingClientRect();
+                const midpoint = rect.top + rect.height / 2;
+                
+                if (e.clientY < midpoint) {
+                    // Insert before
+                    container.insertBefore(draggedElement, this);
+                } else {
+                    // Insert after
+                    container.insertBefore(draggedElement, this.nextSibling);
+                }
+                
+                // Save new order
+                saveTweetOrder();
+                
+                // Show feedback
+                showReorderFeedback();
+            }
+            
+            // Clean up
+            this.classList.remove('drag-over');
+        });
+    });
+}
+
+function saveTweetOrder() {
+    const tweetCards = document.querySelectorAll('.tweet-card');
+    const order = [];
+    
+    tweetCards.forEach((card, index) => {
+        const tweetId = card.dataset.dbId;
+        order.push({
+            tweet_id: tweetId,
+            position: index + 1
+        });
+    });
+    
+    // Send to server (placeholder for now)
+    console.log('New tweet order:', order);
+    
+    // TODO: Implement API endpoint to save tweet order
+    // fetch('/twitter/api/save-tweet-order/', {
+    //     method: 'POST',
+    //     headers: {
+    //         'X-CSRFToken': getCsrfToken(),
+    //         'Content-Type': 'application/json'
+    //     },
+    //     body: JSON.stringify({ order: order })
+    // });
+}
+
+function showReorderFeedback() {
+    // Create feedback notification
+    const feedback = document.createElement('div');
+    feedback.style.cssText = `
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        background: #10B981;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        z-index: 1000;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        animation: slideInRight 0.3s ease;
+    `;
+    feedback.textContent = '✅ Tweet order updated';
+    
+    document.body.appendChild(feedback);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        feedback.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => {
+            feedback.remove();
+        }, 300);
+    }, 3000);
+}
+
+// Add CSS animations for feedback
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Individual tweet actions
+function saveTweet(tweetId) {
+    const content = document.getElementById(`content-${tweetId}`).value;
+    const saveBtn = event.target;
+    const originalText = saveBtn.textContent;
+    
+    saveBtn.textContent = '🔄 Saving...';
+    saveBtn.disabled = true;
+    
+    fetch(`/twitter/api/save-generated-tweet/${tweetId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ content: content })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update character count
+            const charCount = document.getElementById(`char-count-${tweetId}`);
+            charCount.textContent = `${data.character_count}/280`;
+            updateCharacterCount(tweetId);
+            
+            showActionFeedback(tweetId, 'Saved ✅');
+            saveBtn.textContent = '✅ Saved';
+            setTimeout(() => {
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            }, 2000);
+        } else {
+            alert('Error saving tweet: ' + data.error);
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        alert('Network error saving tweet');
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+    });
+}
+
+function approveTweet(tweetId) {
+    const approveBtn = event.target;
+    const originalText = approveBtn.textContent;
+    
+    approveBtn.textContent = '🔄 Approving...';
+    approveBtn.disabled = true;
+    
+    fetch(`/twitter/api/approve-generated-tweet/${tweetId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update status badge
+            const badge = approveBtn.closest('.tweet-card').querySelector('.brand-aligned-badge');
+            badge.textContent = 'APPROVED';
+            badge.style.background = '#10B981';
+            
+            showActionFeedback(tweetId, 'Approved ✅');
+            approveBtn.textContent = '✅ Approved';
+            setTimeout(() => {
+                approveBtn.textContent = originalText;
+                approveBtn.disabled = false;
+            }, 2000);
+        } else {
+            alert('Error approving tweet: ' + data.error);
+            approveBtn.textContent = originalText;
+            approveBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        alert('Network error approving tweet');
+        approveBtn.textContent = originalText;
+        approveBtn.disabled = false;
+    });
+}
+
+function postTweet(tweetId) {
+    if (confirm('Post this tweet to X.com? This action cannot be undone.')) {
+        const postBtn = event.target;
+        const originalText = postBtn.textContent;
+        
+        postBtn.textContent = '🔄 Posting...';
+        postBtn.disabled = true;
+        
+        fetch(`/twitter/api/post-tweet-to-x/${tweetId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.placeholder) {
+                    alert('✅ Tweet marked as posted!\n\n⚠️ Note: This is currently a placeholder. X.com API integration will be added later.');
+                }
+                
+                // Update status badge
+                const badge = postBtn.closest('.tweet-card').querySelector('.brand-aligned-badge');
+                badge.textContent = 'POSTED';
+                badge.style.background = '#F59E0B';
+                
+                showActionFeedback(tweetId, 'Posted 🚀');
+                postBtn.textContent = '🚀 Posted';
+                setTimeout(() => {
+                    postBtn.textContent = originalText;
+                    postBtn.disabled = false;
+                }, 2000);
+            } else {
+                alert('Error posting tweet: ' + data.error);
+                postBtn.textContent = originalText;
+                postBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            alert('Network error posting tweet');
+            postBtn.textContent = originalText;
+            postBtn.disabled = false;
+        });
+    }
+}
+
+function rejectTweet(tweetId) {
+    if (confirm('Reject this tweet? It will be marked as rejected.')) {
+        const rejectBtn = event.target;
+        const originalText = rejectBtn.textContent;
+        
+        rejectBtn.textContent = '🔄 Rejecting...';
+        rejectBtn.disabled = true;
+        
+        fetch(`/twitter/api/reject-generated-tweet/${tweetId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update status badge
+                const badge = rejectBtn.closest('.tweet-card').querySelector('.brand-aligned-badge');
+                badge.textContent = 'REJECTED';
+                badge.style.background = '#EF4444';
+                
+                showActionFeedback(tweetId, 'Rejected ❌');
+                rejectBtn.textContent = '❌ Rejected';
+                setTimeout(() => {
+                    rejectBtn.textContent = originalText;
+                    rejectBtn.disabled = false;
+                }, 2000);
+            } else {
+                alert('Error rejecting tweet: ' + data.error);
+                rejectBtn.textContent = originalText;
+                rejectBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            alert('Network error rejecting tweet');
+            rejectBtn.textContent = originalText;
+            rejectBtn.disabled = false;
+        });
+    }
+}
+
+function deleteTweet(tweetId) {
+    if (confirm('Delete this tweet permanently? This action cannot be undone.')) {
+        const deleteBtn = event.target;
+        const originalText = deleteBtn.textContent;
+        
+        deleteBtn.textContent = '🔄 Deleting...';
+        deleteBtn.disabled = true;
+        
+        fetch(`/twitter/api/delete-generated-tweet/${tweetId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the entire tweet card with animation
+                const tweetCard = deleteBtn.closest('.tweet-card');
+                tweetCard.style.opacity = '0.5';
+                tweetCard.style.transform = 'scale(0.95)';
+                tweetCard.style.transition = 'all 0.3s ease';
+                
+                setTimeout(() => {
+                    tweetCard.remove();
+                }, 300);
+                
+                showActionFeedback(tweetId, 'Deleted 🗑️');
+            } else {
+                alert('Error deleting tweet: ' + data.error);
+                deleteBtn.textContent = originalText;
+                deleteBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            alert('Network error deleting tweet');
+            deleteBtn.textContent = originalText;
+            deleteBtn.disabled = false;
+        });
+    }
+}
+
+// Helper Functions
+function getCsrfToken() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') {
+            return value;
+        }
+    }
+    return '';
+}
+
+// Tweet Preview Functions
+function previewTweet(tweetId) {
+    const content = document.getElementById(`content-${tweetId}`).value;
+    const modal = document.getElementById('tweetPreviewModal');
+    const previewContent = document.getElementById('tweetPreviewContent');
+    
+    // Generate X.com-style preview
+    const now = new Date();
+    const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const dateString = now.toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+    
+    previewContent.innerHTML = `
+        <div class="x-tweet-header">
+            <div class="x-avatar">🚀</div>
+            <div class="x-user-info">
+                <div class="x-display-name">CoopHive</div>
+                <div class="x-username">@coophive · ${timeString}</div>
+            </div>
+        </div>
+        
+        <div class="x-tweet-content">${content}</div>
+        
+        <div class="x-tweet-footer">
+            <div class="x-timestamp">${timeString} · ${dateString}</div>
+            <div class="x-engagement-stats">
+                <span>👁️ 0 Views</span>
+            </div>
+        </div>
+        
+        <div class="x-actions">
+            <button class="x-action-btn" title="Reply">💬</button>
+            <button class="x-action-btn" title="Retweet">🔄</button>
+            <button class="x-action-btn" title="Like">❤️</button>
+            <button class="x-action-btn" title="Share">🔗</button>
+        </div>
+    `;
+    
+    modal.style.display = 'block';
+}
+
+function closeTweetPreview() {
+    document.getElementById('tweetPreviewModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const previewModal = document.getElementById('tweetPreviewModal');
+    if (event.target === previewModal) {
+        closeTweetPreview();
+    }
+}
+
+function saveAllChanges() {
+    const tweetCards = document.querySelectorAll('.tweet-card');
+    let savedCount = 0;
+    
+    tweetCards.forEach(card => {
+        const tweetId = card.querySelector('.tweet-content').id.split('-')[1];
+        const content = card.querySelector('.tweet-content').value;
+        
+        fetch(`/twitter/api/save-generated-tweet/${tweetId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content: content })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                savedCount++;
+                showActionFeedback(tweetId, 'Saved ✅');
+            }
+        })
+        .catch(error => console.error('Error saving tweet:', error));
+    });
+    
+    alert(`Saving all ${tweetCards.length} tweets...`);
+}
+
+function previewMode() {
+    const textareas = document.querySelectorAll('.tweet-content');
+    const isReadonly = textareas[0].readOnly;
+    
+    textareas.forEach(textarea => {
+        textarea.readOnly = !isReadonly;
+        textarea.style.background = isReadonly ? '#F8F9FA' : 'white';
+        textarea.style.border = isReadonly ? '3px solid #1DA1F2' : '2px solid #e5e7eb';
+    });
+    
+    const previewBtn = document.querySelector('.btn-preview');
+    previewBtn.textContent = isReadonly ? '👁️ Preview Mode' : '✏️ Edit Mode';
+}
+
+
+
+// Bulk actions
+function approveAll() {
+    if (confirm('Approve all tweets in this campaign?')) {
+        console.log('Approve all tweets');
+        // TODO: Implement bulk API call
+        alert('Bulk approve functionality coming soon!');
+    }
+}
+
+function saveAllChanges() {
+    console.log('Save all changes');
+    // TODO: Implement bulk save API call
+    alert('Save all changes functionality coming soon!');
+}
+
+function previewMode() {
+    console.log('Preview mode');
+    // TODO: Implement preview mode
+    alert('Preview mode functionality coming soon!');
+}
+
+// Action feedback
+function showActionFeedback(tweetId, action) {
+    const card = document.querySelector(`[data-tweet-id="${tweetId}"]`);
+    if (card) {
+        const feedback = document.createElement('div');
+        feedback.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #10B981;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            z-index: 10;
+        `;
+        feedback.textContent = `🔄 ${action}`;
+        
+        card.style.position = 'relative';
+        card.appendChild(feedback);
+        
+        setTimeout(() => {
+            feedback.remove();
+        }, 5000);
+    }
+}
+
+// Initialize character counts on page load
+document.addEventListener('DOMContentLoaded', function() {
+    {% for tweet in tweets %}
+    updateCharacterCount({{ tweet.id }});
+    {% endfor %}
+});
+</script>
+{% endblock %}

@@ -10,16 +10,25 @@ DEBUG=True|False
 ALLOWED_HOSTS=host1,host2,host3
 DATABASE_URL=postgresql://user:pass@host:port/dbname
 
-# Email Configuration
+# Email Configuration (Required for super admin password reset)
 EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
+EMAIL_PORT=465
 EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
+EMAIL_HOST_PASSWORD=your-gmail-app-password
 DEFAULT_FROM_EMAIL=noreply@coophive.network
+
+# Note: Gmail requires app passwords, not regular passwords
+# Port 465 uses SSL, port 587 uses TLS
 
 # Domain Restriction
 DOMAIN_RESTRICTION_ENABLED=True
 ALLOWED_DOMAIN=coophive.network
+
+# Google OAuth (database-first via app_settings) - WORKING!
+GOOGLE_OAUTH_CLIENT_ID=your-google-client-id
+GOOGLE_OAUTH_CLIENT_SECRET=your-google-client-secret
+# Note: OAuth credentials are stored in database via app_settings
+# Environment variables serve as fallback during initial setup
 
 # Social Media API Keys
 LINKEDIN_CLIENT_ID=your-client-id
@@ -112,22 +121,44 @@ DATABASES = {
 
 #### Auth Configuration
 ```python
-AUTH_USER_MODEL = 'user_account_manager.User'
-
+# Custom authentication backends
 AUTHENTICATION_BACKENDS = [
+    'user_account_manager.backends.EmailOrUsernameModelBackend',  # Custom backend for email/username login
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-LOGIN_URL = 'user_account_manager:login'
+# Django-allauth settings
+SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# Django-allauth settings
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_USERNAME_REQUIRED = False
+# Use custom adapter for Google OAuth with domain restrictions
+SOCIALACCOUNT_ADAPTER = 'user_account_manager.adapters.CustomSocialAccountAdapter'
+
+# Allauth social account settings (TaskForge-style)
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_REQUIRED = False  # Don't require email confirmation
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"  # Skip ALL email verification
+SOCIALACCOUNT_LOGIN_ON_GET = True  # Direct login without confirmation page
+SOCIALACCOUNT_SIGNUP_FORM_CLASS = None  # No signup form
+SOCIALACCOUNT_FORMS = {}  # No custom forms
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        # No APP config - allauth will use SocialApp from database (WORKING!)
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': False,  # Fixed token issues - WORKING!
+        'FETCH_USERINFO': True,
+        'VERIFIED_EMAIL': True,  # Trust Google's email verification
+    }
+}
 ```
 
 #### REST Framework Settings
@@ -155,16 +186,28 @@ CACHES = {
 }
 ```
 
-#### Email Configuration
+#### Email Configuration (Database-First with Environment Fallback) - ✅ WORKING!
 ```python
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Custom email backend that loads settings dynamically
+EMAIL_BACKEND = 'user_account_manager.email_backend.DatabaseFirstEmailBackend'
+
+# Fallback settings when database is unavailable
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 465))  # Gmail SSL port
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'True').lower() == 'true'  # SSL for Gmail
+EMAIL_USE_TLS = False  # Don't use TLS when using SSL
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@coophive.network')
 ```
+
+#### Email Backend Features - ✅ FULLY FUNCTIONAL
+- **Database-first**: Email settings loaded from `AppSetting` model via `SettingsManager`
+- **Environment fallback**: Uses `.env` file when database unavailable
+- **Gmail SSL support**: Automatically uses SSL for port 465, prevents TLS/SSL conflicts
+- **Runtime configuration**: Settings loaded dynamically, not at startup
+- **Fixed timeout issues**: Proper SSL configuration resolves SMTP timeout errors
+- **Password reset working**: Super admins can reset passwords via email at `/accounts/password/reset/`
 
 ## Production Settings
 

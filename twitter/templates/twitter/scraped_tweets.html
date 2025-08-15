@@ -1,0 +1,1283 @@
+{% extends 'base.html' %}
+
+{% block title %}Scraped Tweets Database - CoopHive{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern CSS Reset & Base Styles */
+    * {
+        box-sizing: border-box;
+    }
+    
+    /* Container System */
+    .container-wrapper {
+        width: 100%;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 0.5rem;
+    }
+    
+    .main-container {
+        max-width: 98%;
+        width: 100%;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 1.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Responsive Container */
+    @media (max-width: 1600px) {
+        .main-container {
+            max-width: 96%;
+            padding: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 1200px) {
+        .main-container {
+            max-width: 94%;
+            padding: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .container-wrapper {
+            padding: 0.25rem;
+        }
+        .main-container {
+            max-width: 98%;
+            padding: 1rem;
+            border-radius: 1rem;
+        }
+    }
+    /* Modern Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+    }
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.6s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(102, 126, 234, 0.4);
+    }
+    
+    .stat-card:hover::before {
+        left: 100%;
+    }
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    .stat-label {
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+    .database-section {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #374151;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+    
+    .btn:hover::before {
+        left: 100%;
+    }
+    
+    .btn-success { 
+        background: linear-gradient(135deg, #10b981, #059669); 
+        color: white; 
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .btn-info { 
+        background: linear-gradient(135deg, #3b82f6, #2563eb); 
+        color: white; 
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .btn-secondary { 
+        background: linear-gradient(135deg, #6b7280, #4b5563); 
+        color: white; 
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn:hover { 
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn:active {
+        transform: translateY(0);
+    }
+    
+    /* Modern Table Design */
+    .table-container {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow-x: auto;
+        overflow-y: visible;
+        margin-top: 1.5rem;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        width: 100%;
+    }
+    
+    .tweet-table {
+        width: 100%;
+        min-width: 1000px; /* Ensure minimum width for readability */
+        border-collapse: collapse;
+        table-layout: fixed; /* Critical for responsive design */
+    }
+    
+    .tweet-table th,
+    .tweet-table td {
+        padding: 1rem 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        vertical-align: middle;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .tweet-table th {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    /* Column Width Distribution */
+    .tweet-table th:nth-child(1), .tweet-table td:nth-child(1) { width: 5%; }   /* Checkbox */
+    .tweet-table th:nth-child(2), .tweet-table td:nth-child(2) { width: 5%; }   /* # */
+    .tweet-table th:nth-child(3), .tweet-table td:nth-child(3) { width: 12%; }  /* Tweet ID */
+    .tweet-table th:nth-child(4), .tweet-table td:nth-child(4) { width: 35%; }  /* Content */
+    .tweet-table th:nth-child(5), .tweet-table td:nth-child(5) { width: 12%; }  /* Date */
+    .tweet-table th:nth-child(6), .tweet-table td:nth-child(6) { width: 15%; }  /* Engagement */
+    .tweet-table th:nth-child(7), .tweet-table td:nth-child(7) { width: 10%; }  /* Stats */
+    .tweet-table th:nth-child(8), .tweet-table td:nth-child(8) { width: 6%; }   /* Actions */
+    
+    .tweet-row {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+    
+    .tweet-row:hover {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .tweet-row:hover td {
+        border-color: rgba(59, 130, 246, 0.2);
+    }
+    .tweet-content {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: #374151;
+        transition: color 0.3s ease;
+    }
+    
+    .tweet-row:hover .tweet-content {
+        color: #1f2937;
+    }
+    .tweet-id {
+        font-family: monospace;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    .engagement-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+    }
+    .engagement-row {
+        display: flex;
+        gap: 1rem;
+    }
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .views-stat {
+        font-weight: 600;
+        color: #374151;
+    }
+    .total-stat {
+        color: #6b7280;
+    }
+    .filters {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .filters:hover {
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+    .filter-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    #advancedFilterSection {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+    }
+    .filter-row {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .filter-group label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+    }
+    .filter-input {
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+    .page-link {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #374151;
+        text-decoration: none;
+        border-radius: 0.375rem;
+    }
+    .page-link:hover {
+        background: #f3f4f6;
+    }
+    .page-link.active {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+    .copy-btn {
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 0.25rem;
+    }
+    .copy-btn:hover {
+        background: #f3f4f6;
+    }
+
+    /* Modal Styles */
+    .modal {
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        backdrop-filter: blur(5px);
+    }
+    .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 0;
+        border-radius: 1rem;
+        width: 90%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow: hidden;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+        animation: modalSlideIn 0.3s ease;
+    }
+    @keyframes modalSlideIn {
+        from { opacity: 0; transform: translateY(-50px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-header {
+        background: linear-gradient(135deg, #1da1f2, #0d8bd9);
+        color: white;
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    .close {
+        font-size: 2rem;
+        font-weight: 300;
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+    .close:hover {
+        opacity: 1;
+    }
+    .modal-body {
+        padding: 2rem;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    .loading {
+        text-align: center;
+        padding: 2rem;
+        color: #6b7280;
+    }
+    .tweet-detail-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+    .detail-section {
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        border-left: 4px solid #1da1f2;
+    }
+    .detail-section h3 {
+        margin: 0 0 1rem 0;
+        color: #1f2937;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .detail-field {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .detail-field:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    .detail-label {
+        font-weight: 500;
+        color: #374151;
+    }
+    .detail-value {
+        color: #6b7280;
+        word-break: break-word;
+    }
+    .engagement-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .engagement-card {
+        background: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        text-align: center;
+        border: 1px solid #e5e7eb;
+    }
+    .engagement-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+    .engagement-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    .tweet-content-full {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: #1f2937;
+    }
+    .sortable-header {
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.2s;
+        position: relative;
+    }
+    .sortable-header:hover {
+        background-color: rgba(29, 161, 242, 0.1);
+    }
+    .sort-indicator {
+        margin-left: 0.5rem;
+        font-size: 0.875rem;
+        opacity: 0.7;
+    }
+    .sortable-header:hover .sort-indicator {
+        opacity: 1;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+        .tweet-table th:nth-child(7), .tweet-table td:nth-child(7) { 
+            display: none; /* Hide Stats column on tablets */
+        }
+        .tweet-table th:nth-child(4), .tweet-table td:nth-child(4) { width: 45%; }  /* Expand Content */
+        .tweet-table th:nth-child(6), .tweet-table td:nth-child(6) { width: 20%; }  /* Expand Engagement */
+    }
+    
+    @media (max-width: 768px) {
+        .tweet-table th:nth-child(3), .tweet-table td:nth-child(3),
+        .tweet-table th:nth-child(5), .tweet-table td:nth-child(5) { 
+            display: none; /* Hide Tweet ID and Date on mobile */
+        }
+        .tweet-table th:nth-child(4), .tweet-table td:nth-child(4) { width: 60%; }  /* Expand Content */
+        .tweet-table th:nth-child(6), .tweet-table td:nth-child(6) { width: 25%; }  /* Expand Engagement */
+        
+        .main-container {
+            padding: 1rem 0.5rem;
+        }
+        
+        .tweet-table th,
+        .tweet-table td {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.875rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .tweet-table th:nth-child(2), .tweet-table td:nth-child(2) { 
+            display: none; /* Hide # column on small mobile */
+        }
+        .tweet-table th:nth-child(1), .tweet-table td:nth-child(1) { width: 8%; }   /* Checkbox */
+        .tweet-table th:nth-child(4), .tweet-table td:nth-child(4) { width: 65%; }  /* Content */
+        .tweet-table th:nth-child(6), .tweet-table td:nth-child(6) { width: 20%; }  /* Engagement */
+        .tweet-table th:nth-child(8), .tweet-table td:nth-child(8) { width: 7%; }   /* Actions */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-wrapper">
+<div class="main-container">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">📈 Database Overview</h1>
+        <p class="text-gray-600">Real-time statistics from your scraped tweets</p>
+    </div>
+
+    <!-- Statistics Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-number">{{ total_tweets|floatformat:0 }}</div>
+            <div class="stat-label">Total Tweets</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">❤️</div>
+            <div class="stat-number">{{ total_likes|floatformat:0 }}</div>
+            <div class="stat-label">Total Likes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔄</div>
+            <div class="stat-number">{{ total_retweets|floatformat:0 }}</div>
+            <div class="stat-label">Total Retweets</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">👁️</div>
+            <div class="stat-number">{{ total_views|floatformat:0 }}</div>
+            <div class="stat-label">Total Views</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🚀</div>
+            <div class="stat-number">{{ total_executions|floatformat:0 }}</div>
+            <div class="stat-label">Executions</div>
+        </div>
+    </div>
+
+    <!-- Database Section -->
+    <div class="database-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                📋 Scraped Tweets Database
+            </h2>
+            <div class="action-buttons">
+                <button id="bulkDeleteBtn" class="btn btn-danger" onclick="confirmBulkDelete()" style="display: none;">🗑️ Delete Selected</button>
+                <a href="{% url 'twitter:export_tweets' %}?type=page{% if current_execution_filter %}&execution_id={{ current_execution_filter }}{% endif %}" class="btn btn-success">📥 Export Page</a>
+                <a href="{% url 'twitter:export_tweets' %}?type=all{% if current_execution_filter %}&execution_id={{ current_execution_filter }}{% endif %}" class="btn btn-info">📊 Export All CSV</a>
+                <button class="btn btn-secondary" onclick="window.location.reload()">🔄 Refresh</button>
+            </div>
+        </div>
+
+        <p class="text-gray-600 mb-4">
+            Showing {{ showing_start }}-{{ showing_end }} of {{ total_filtered }} tweets
+        </p>
+
+        <!-- Advanced Search & Filters -->
+        <form method="GET" class="filters" id="advancedFilters">
+            <div class="filter-header">
+                <h3 style="margin: 0; color: #1da1f2; font-weight: 600;">🔍 Advanced Search & Filters</h3>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAdvancedFilters()">
+                    <span id="filterToggleText">Show Advanced</span>
+                </button>
+            </div>
+            
+            <!-- Basic Filters (Always Visible) -->
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="search_content">Search Content:</label>
+                    <input type="text" name="search_content" id="search_content" 
+                           class="filter-input" placeholder="Search in tweet content..."
+                           value="{{ request.GET.search_content }}">
+                </div>
+                <div class="filter-group">
+                    <label for="tweet_id_search">Tweet ID:</label>
+                    <input type="text" name="tweet_id_search" id="tweet_id_search" 
+                           class="filter-input" placeholder="Search by tweet ID..."
+                           value="{{ request.GET.tweet_id_search }}">
+                </div>
+                <div class="filter-group">
+                    <label for="execution_id">Execution ID:</label>
+                    <select name="execution_id" id="execution_id" class="filter-input">
+                        <option value="">All Executions</option>
+                        {% for exec_id in execution_ids %}
+                            <option value="{{ exec_id }}" {% if exec_id == current_execution_filter %}selected{% endif %}>
+                                {{ exec_id }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Advanced Filters (Initially Hidden) -->
+            <div id="advancedFilterSection" style="display: none;">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="date_from">Date From:</label>
+                        <input type="date" name="date_from" id="date_from" 
+                               class="filter-input" value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="filter-group">
+                        <label for="date_to">Date To:</label>
+                        <input type="date" name="date_to" id="date_to" 
+                               class="filter-input" value="{{ request.GET.date_to }}">
+                    </div>
+                    <div class="filter-group">
+                        <label for="status_filter">Status:</label>
+                        <select name="status_filter" id="status_filter" class="filter-input">
+                            <option value="">All Status</option>
+                            <option value="success" {% if request.GET.status_filter == 'success' %}selected{% endif %}>Success</option>
+                            <option value="error" {% if request.GET.status_filter == 'error' %}selected{% endif %}>Error</option>
+                            <option value="pending" {% if request.GET.status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="min_likes">Min Likes:</label>
+                        <input type="number" name="min_likes" id="min_likes" 
+                               class="filter-input" placeholder="0" min="0"
+                               value="{{ request.GET.min_likes }}">
+                    </div>
+                    <div class="filter-group">
+                        <label for="min_retweets">Min Retweets:</label>
+                        <input type="number" name="min_retweets" id="min_retweets" 
+                               class="filter-input" placeholder="0" min="0"
+                               value="{{ request.GET.min_retweets }}">
+                    </div>
+                    <div class="filter-group">
+                        <label for="min_views">Min Views:</label>
+                        <input type="number" name="min_views" id="min_views" 
+                               class="filter-input" placeholder="0" min="0"
+                               value="{{ request.GET.min_views }}">
+                    </div>
+                </div>
+                
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="sort_by">Sort By:</label>
+                        <select name="sort_by" id="sort_by" class="filter-input">
+                            <option value="-date" {% if request.GET.sort_by == '-date' %}selected{% endif %}>Date (Newest First)</option>
+                            <option value="date" {% if request.GET.sort_by == 'date' %}selected{% endif %}>Date (Oldest First)</option>
+                            <option value="-likes" {% if request.GET.sort_by == '-likes' %}selected{% endif %}>Most Likes</option>
+                            <option value="-retweets" {% if request.GET.sort_by == '-retweets' %}selected{% endif %}>Most Retweets</option>
+                            <option value="-views" {% if request.GET.sort_by == '-views' %}selected{% endif %}>Most Views</option>
+                            <option value="-total_engagement" {% if request.GET.sort_by == '-total_engagement' %}selected{% endif %}>Total Engagement</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="processed_filter">Processed:</label>
+                        <select name="processed_filter" id="processed_filter" class="filter-input">
+                            <option value="">All</option>
+                            <option value="true" {% if request.GET.processed_filter == 'true' %}selected{% endif %}>Processed</option>
+                            <option value="false" {% if request.GET.processed_filter == 'false' %}selected{% endif %}>Not Processed</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>&nbsp;</label>
+                        <div>
+                            <button type="submit" class="btn btn-info">🔍 Search</button>
+                            <a href="?" class="btn btn-secondary">🔄 Clear All</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Simple Action Buttons (Always Visible) -->
+            <div class="filter-row" id="simpleActions">
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <div>
+                        <button type="submit" class="btn btn-info">🔍 Search</button>
+                        <a href="?" class="btn btn-secondary">🔄 Clear</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Tweets Table -->
+        <div class="table-container">
+        <table class="tweet-table">
+            <thead>
+                <tr>
+                    <th>
+                        <input type="checkbox" id="selectAll" onchange="toggleAllTweets()">
+                        <label for="selectAll" style="margin-left: 0.5rem; font-size: 0.875rem;">All</label>
+                    </th>
+                    <th>#</th>
+                    <th class="sortable-header" onclick="sortBy('tweet_id')">
+                        Tweet ID
+                        <span class="sort-indicator">{% if request.GET.sort_by == 'tweet_id' %}↑{% elif request.GET.sort_by == '-tweet_id' %}↓{% else %}⇅{% endif %}</span>
+                    </th>
+                    <th>Content</th>
+                    <th class="sortable-header" onclick="sortBy('date')">
+                        Date
+                        <span class="sort-indicator">{% if request.GET.sort_by == 'date' %}↑{% elif request.GET.sort_by == '-date' %}↓{% else %}⇅{% endif %}</span>
+                    </th>
+                    <th class="sortable-header" onclick="sortBy('likes')">
+                        Engagement
+                        <span class="sort-indicator">{% if request.GET.sort_by == 'likes' %}↑{% elif request.GET.sort_by == '-likes' %}↓{% else %}⇅{% endif %}</span>
+                    </th>
+                    <th class="sortable-header" onclick="sortBy('views')">
+                        Stats
+                        <span class="sort-indicator">{% if request.GET.sort_by == 'views' %}↑{% elif request.GET.sort_by == '-views' %}↓{% else %}⇅{% endif %}</span>
+                    </th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tweet in tweets %}
+                <tr class="tweet-row">
+                    <td>
+                        <input type="checkbox" name="selected_tweets" value="{{ tweet.id }}">
+                    </td>
+                    <td>{{ forloop.counter0|add:showing_start }}</td>
+                    <td>
+                        <div class="tweet-id">
+                            {{ tweet.tweet_id }}
+                            <button class="copy-btn" onclick="copyToClipboard('{{ tweet.tweet_id }}')" title="Copy Tweet ID">
+                                📋
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="tweet-content" title="{{ tweet.content }}">
+                            {{ tweet.content|truncatechars:100 }}
+                        </div>
+                    </td>
+                    <td>
+                        <div>{{ tweet.date|date:"Y-m-d" }}</div>
+                        <div class="text-sm text-gray-500">{{ tweet.date|time:"H:i:s" }}</div>
+                    </td>
+                    <td>
+                        <div class="engagement-stats">
+                            <div class="engagement-row">
+                                <span class="stat-item">❤️ {{ tweet.likes }}</span>
+                                <span class="stat-item">🔄 {{ tweet.retweets }}</span>
+                                <span class="stat-item">💬 {{ tweet.replies }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="engagement-stats">
+                            <div class="views-stat">Views: {{ tweet.views|floatformat:0 }}</div>
+                            <div class="total-stat">Total: {{ tweet.likes|add:tweet.retweets|add:tweet.replies }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if tweet.url %}
+                            <a href="{{ tweet.url }}" target="_blank" class="text-blue-600 hover:text-blue-800" title="View on X/Twitter">🔗</a>
+                        {% endif %}
+                        <button class="copy-btn ml-2" onclick="showTweetDetails({{ tweet.id }})" title="Tweet Info">ℹ️</button>
+                        <button class="copy-btn ml-2" onclick="confirmSingleDelete({{ tweet.id }}, '{{ tweet.tweet_id }}')" title="Delete Tweet" style="color: #dc2626;">🗑️</button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-8 text-gray-500">
+                        No tweets found. Try adjusting your filters or check if data has been loaded.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if tweets.has_other_pages %}
+        <div class="pagination">
+            {% if tweets.has_previous %}
+                <a href="?page=1{% if current_execution_filter %}&execution_id={{ current_execution_filter }}{% endif %}" class="page-link">First</a>
+                <a href="?page={{ tweets.previous_page_number }}{% if current_execution_filter %}&execution_id={{ current_execution_filter }}{% endif %}" class="page-link">Previous</a>
+            {% endif %}
+            
+            <span class="page-link active">
+                Page {{ tweets.number }} of {{ tweets.paginator.num_pages }}
+            </span>
+            
+            {% if tweets.has_next %}
+                <a href="?page={{ tweets.next_page_number }}{% if current_execution_filter %}&execution_id={{ current_execution_filter }}{% endif %}" class="page-link">Next</a>
+                <a href="?page={{ tweets.paginator.num_pages }}{% if current_execution_filter %}&execution_id={{ current_execution_filter }}{% endif %}" class="page-link">Last</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Tweet Detail Modal -->
+<div id="tweetModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>🐦 Tweet Details</h2>
+            <span class="close" onclick="closeTweetModal()">&times;</span>
+        </div>
+        <div class="modal-body" id="tweetModalContent">
+            <div class="loading">Loading tweet details...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+            <h2>🗑️ Confirm Delete</h2>
+            <span class="close" onclick="closeDeleteModal()">&times;</span>
+        </div>
+        <div class="modal-body" id="deleteModalContent">
+            <div class="loading">Loading...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show a brief success indicator
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✅';
+        setTimeout(() => {
+            btn.textContent = originalText;
+        }, 1000);
+    }).catch(function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+
+// Tweet Detail Modal Functions
+function showTweetDetails(tweetId) {
+    const modal = document.getElementById('tweetModal');
+    const modalContent = document.getElementById('tweetModalContent');
+    
+    // Show modal with loading state
+    modal.style.display = 'block';
+    modalContent.innerHTML = '<div class="loading">Loading tweet details...</div>';
+    
+    // Fetch tweet details
+    fetch(`/twitter/api/tweet-details/${tweetId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                modalContent.innerHTML = generateTweetDetailsHTML(data.tweet);
+            } else {
+                modalContent.innerHTML = '<div class="loading" style="color: #ef4444;">Error loading tweet details</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            modalContent.innerHTML = '<div class="loading" style="color: #ef4444;">Error loading tweet details</div>';
+        });
+}
+
+function closeTweetModal() {
+    document.getElementById('tweetModal').style.display = 'none';
+}
+
+function generateTweetDetailsHTML(tweet) {
+    return `
+        <div class="tweet-detail-grid">
+            <!-- Tweet Content -->
+            <div class="detail-section">
+                <h3>📝 Tweet Content</h3>
+                <div class="tweet-content-full">${tweet.content}</div>
+            </div>
+            
+            <!-- Basic Information -->
+            <div class="detail-section">
+                <h3>ℹ️ Basic Information</h3>
+                <div class="detail-field">
+                    <div class="detail-label">Tweet ID:</div>
+                    <div class="detail-value">
+                        ${tweet.tweet_id}
+                        <button class="copy-btn ml-2" onclick="copyToClipboard('${tweet.tweet_id}')" title="Copy">📋</button>
+                    </div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-label">Date Posted:</div>
+                    <div class="detail-value">${new Date(tweet.date).toLocaleString()}</div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-label">Status:</div>
+                    <div class="detail-value">${tweet.status}</div>
+                </div>
+                ${tweet.url ? `
+                <div class="detail-field">
+                    <div class="detail-label">Original URL:</div>
+                    <div class="detail-value"><a href="${tweet.url}" target="_blank" class="text-blue-600 hover:underline">${tweet.url}</a></div>
+                </div>` : ''}
+                ${tweet.tweet_url ? `
+                <div class="detail-field">
+                    <div class="detail-label">Tweet URL:</div>
+                    <div class="detail-value"><a href="${tweet.tweet_url}" target="_blank" class="text-blue-600 hover:underline">${tweet.tweet_url}</a></div>
+                </div>` : ''}
+            </div>
+            
+            <!-- Engagement Metrics -->
+            <div class="detail-section">
+                <h3>📊 Engagement Metrics</h3>
+                <div class="engagement-grid">
+                    <div class="engagement-card">
+                        <div class="engagement-number">❤️ ${tweet.likes.toLocaleString()}</div>
+                        <div class="engagement-label">Likes</div>
+                    </div>
+                    <div class="engagement-card">
+                        <div class="engagement-number">🔄 ${tweet.retweets.toLocaleString()}</div>
+                        <div class="engagement-label">Retweets</div>
+                    </div>
+                    <div class="engagement-card">
+                        <div class="engagement-number">💬 ${tweet.replies.toLocaleString()}</div>
+                        <div class="engagement-label">Replies</div>
+                    </div>
+                    <div class="engagement-card">
+                        <div class="engagement-number">🔗 ${tweet.quotes.toLocaleString()}</div>
+                        <div class="engagement-label">Quotes</div>
+                    </div>
+                    <div class="engagement-card">
+                        <div class="engagement-number">👁️ ${tweet.views.toLocaleString()}</div>
+                        <div class="engagement-label">Views</div>
+                    </div>
+                    <div class="engagement-card">
+                        <div class="engagement-number">🎯 ${(tweet.likes + tweet.retweets + tweet.replies + tweet.quotes).toLocaleString()}</div>
+                        <div class="engagement-label">Total Engagement</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Processing Information -->
+            <div class="detail-section">
+                <h3>⚙️ Processing Information</h3>
+                <div class="detail-field">
+                    <div class="detail-label">Execution ID:</div>
+                    <div class="detail-value">${tweet.execution_id || 'N/A'}</div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-label">Source URL:</div>
+                    <div class="detail-value">${tweet.source_url || 'N/A'}</div>
+                </div>
+                <div class="detail-field">
+                    <div class="detail-label">Processed:</div>
+                    <div class="detail-value">${tweet.is_processed ? '✅ Yes' : '❌ No'}</div>
+                </div>
+                ${tweet.processed_at ? `
+                <div class="detail-field">
+                    <div class="detail-label">Processed At:</div>
+                    <div class="detail-value">${new Date(tweet.processed_at).toLocaleString()}</div>
+                </div>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+// Delete Functionality
+function toggleAllTweets() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('input[name="selected_tweets"]');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    // Show/hide bulk delete button based on selection
+    updateBulkDeleteButton();
+}
+
+function updateBulkDeleteButton() {
+    const checkboxes = document.querySelectorAll('input[name="selected_tweets"]:checked');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    
+    if (checkboxes.length > 0) {
+        bulkDeleteBtn.style.display = 'inline-block';
+        bulkDeleteBtn.textContent = `🗑️ Delete Selected (${checkboxes.length})`;
+    } else {
+        bulkDeleteBtn.style.display = 'none';
+    }
+}
+
+function confirmSingleDelete(tweetId, tweetIdText) {
+    const modal = document.getElementById('deleteModal');
+    const modalContent = document.getElementById('deleteModalContent');
+    
+    modalContent.innerHTML = `
+        <div style="text-align: center; padding: 1rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+            <h3 style="margin-bottom: 1rem; color: #dc2626;">Delete Tweet?</h3>
+            <p style="margin-bottom: 1.5rem; color: #6b7280;">
+                Are you sure you want to delete tweet <strong>${tweetIdText}</strong>?
+                <br><br>
+                <span style="color: #dc2626; font-weight: 500;">This action cannot be undone.</span>
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button onclick="closeDeleteModal()" class="btn btn-secondary">Cancel</button>
+                <button onclick="deleteTweet(${tweetId})" class="btn btn-danger">🗑️ Delete</button>
+            </div>
+        </div>
+    `;
+    
+    modal.style.display = 'block';
+}
+
+function confirmBulkDelete() {
+    const checkboxes = document.querySelectorAll('input[name="selected_tweets"]:checked');
+    const count = checkboxes.length;
+    
+    if (count === 0) {
+        alert('Please select tweets to delete.');
+        return;
+    }
+    
+    const modal = document.getElementById('deleteModal');
+    const modalContent = document.getElementById('deleteModalContent');
+    
+    modalContent.innerHTML = `
+        <div style="text-align: center; padding: 1rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+            <h3 style="margin-bottom: 1rem; color: #dc2626;">Delete ${count} Tweet${count > 1 ? 's' : ''}?</h3>
+            <p style="margin-bottom: 1.5rem; color: #6b7280;">
+                Are you sure you want to delete <strong>${count} selected tweet${count > 1 ? 's' : ''}</strong>?
+                <br><br>
+                <span style="color: #dc2626; font-weight: 500;">This action cannot be undone.</span>
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button onclick="closeDeleteModal()" class="btn btn-secondary">Cancel</button>
+                <button onclick="bulkDeleteTweets()" class="btn btn-danger">🗑️ Delete ${count} Tweet${count > 1 ? 's' : ''}</button>
+            </div>
+        </div>
+    `;
+    
+    modal.style.display = 'block';
+}
+
+function deleteTweet(tweetId) {
+    const modalContent = document.getElementById('deleteModalContent');
+    modalContent.innerHTML = '<div class="loading">Deleting tweet...</div>';
+    
+    fetch(`/twitter/api/delete-tweet/${tweetId}/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            modalContent.innerHTML = `
+                <div style="text-align: center; padding: 1rem; color: #059669;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                    <h3>Tweet Deleted Successfully!</h3>
+                    <p style="margin: 1rem 0;">The tweet has been removed from the database.</p>
+                    <button onclick="window.location.reload()" class="btn btn-success">🔄 Refresh Page</button>
+                </div>
+            `;
+        } else {
+            modalContent.innerHTML = `
+                <div style="text-align: center; padding: 1rem; color: #dc2626;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+                    <h3>Error Deleting Tweet</h3>
+                    <p style="margin: 1rem 0;">${data.error || 'An error occurred while deleting the tweet.'}</p>
+                    <button onclick="closeDeleteModal()" class="btn btn-secondary">Close</button>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        modalContent.innerHTML = `
+            <div style="text-align: center; padding: 1rem; color: #dc2626;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+                <h3>Error Deleting Tweet</h3>
+                <p style="margin: 1rem 0;">Network error occurred. Please try again.</p>
+                <button onclick="closeDeleteModal()" class="btn btn-secondary">Close</button>
+            </div>
+        `;
+    });
+}
+
+function bulkDeleteTweets() {
+    const checkboxes = document.querySelectorAll('input[name="selected_tweets"]:checked');
+    const tweetIds = Array.from(checkboxes).map(cb => cb.value);
+    const modalContent = document.getElementById('deleteModalContent');
+    
+    modalContent.innerHTML = '<div class="loading">Deleting tweets...</div>';
+    
+    fetch('/twitter/api/bulk-delete-tweets/', {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tweet_ids: tweetIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            modalContent.innerHTML = `
+                <div style="text-align: center; padding: 1rem; color: #059669;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                    <h3>Tweets Deleted Successfully!</h3>
+                    <p style="margin: 1rem 0;">${data.deleted_count} tweet${data.deleted_count > 1 ? 's' : ''} have been removed from the database.</p>
+                    <button onclick="window.location.reload()" class="btn btn-success">🔄 Refresh Page</button>
+                </div>
+            `;
+        } else {
+            modalContent.innerHTML = `
+                <div style="text-align: center; padding: 1rem; color: #dc2626;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+                    <h3>Error Deleting Tweets</h3>
+                    <p style="margin: 1rem 0;">${data.error || 'An error occurred while deleting tweets.'}</p>
+                    <button onclick="closeDeleteModal()" class="btn btn-secondary">Close</button>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        modalContent.innerHTML = `
+            <div style="text-align: center; padding: 1rem; color: #dc2626;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+                <h3>Error Deleting Tweets</h3>
+                <p style="margin: 1rem 0;">Network error occurred. Please try again.</p>
+                <button onclick="closeDeleteModal()" class="btn btn-secondary">Close</button>
+            </div>
+        `;
+    });
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+function getCsrfToken() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') {
+            return value;
+        }
+    }
+    return '';
+}
+
+// Add event listeners for checkboxes
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('input[name="selected_tweets"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateBulkDeleteButton);
+    });
+});
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const tweetModal = document.getElementById('tweetModal');
+    const deleteModal = document.getElementById('deleteModal');
+    
+    if (event.target === tweetModal) {
+        closeTweetModal();
+    } else if (event.target === deleteModal) {
+        closeDeleteModal();
+    }
+}
+
+// Advanced Filters Toggle
+function toggleAdvancedFilters() {
+    const advancedSection = document.getElementById('advancedFilterSection');
+    const simpleActions = document.getElementById('simpleActions');
+    const toggleText = document.getElementById('filterToggleText');
+    
+    if (advancedSection.style.display === 'none') {
+        advancedSection.style.display = 'block';
+        simpleActions.style.display = 'none';
+        toggleText.textContent = 'Hide Advanced';
+    } else {
+        advancedSection.style.display = 'none';
+        simpleActions.style.display = 'block';
+        toggleText.textContent = 'Show Advanced';
+    }
+}
+
+// Sortable Columns
+function sortBy(field) {
+    const currentUrl = new URL(window.location);
+    const currentSort = currentUrl.searchParams.get('sort_by');
+    
+    let newSort;
+    if (currentSort === field) {
+        // If currently sorting by this field ascending, switch to descending
+        newSort = '-' + field;
+    } else if (currentSort === '-' + field) {
+        // If currently sorting by this field descending, switch to ascending
+        newSort = field;
+    } else {
+        // Default to descending for most fields, ascending for date
+        newSort = field === 'date' ? field : '-' + field;
+    }
+    
+    currentUrl.searchParams.set('sort_by', newSort);
+    window.location.href = currentUrl.toString();
+}
+
+// Auto-refresh every 30 seconds
+setTimeout(function() {
+    window.location.reload();
+}, 30000);
+</script>
+{% endblock %}

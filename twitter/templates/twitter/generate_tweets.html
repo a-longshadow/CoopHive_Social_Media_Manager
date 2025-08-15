@@ -1,0 +1,521 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .batch-card {
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .batch-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .batch-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1da1f2;
+    }
+    .batch-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .badge-api-batch {
+        background: #3B82F6;
+        color: white;
+    }
+    .badge-draft {
+        background: #6B7280;
+        color: white;
+    }
+    .batch-meta {
+        color: #6B7280;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+    .batch-description {
+        color: #374151;
+        margin-bottom: 1rem;
+    }
+    .batch-stats {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .stat-item {
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1da1f2;
+    }
+    .stat-label {
+        font-size: 0.75rem;
+        color: #6B7280;
+        text-transform: uppercase;
+    }
+    .batch-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-review {
+        background: #6B7280;
+        color: white;
+    }
+    .btn-review:hover {
+        background: #4B5563;
+    }
+    .btn-soft-delete {
+        background: #F3F4F6;
+        color: #6B7280;
+        border: 1px solid #D1D5DB;
+    }
+    .btn-soft-delete:hover {
+        background: #E5E7EB;
+    }
+    .btn-hard-delete {
+        background: #EF4444;
+        color: white;
+    }
+    .btn-hard-delete:hover {
+        background: #DC2626;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6B7280;
+    }
+    .page-header {
+        background: linear-gradient(135deg, #1da1f2, #0d8bd9);
+        color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    
+    /* AI Integration Styles */
+    .ai-feature-card {
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    .ai-feature-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+        border-color: rgba(139, 92, 246, 0.4);
+    }
+    .ai-feature-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    .ai-feature-icon {
+        font-size: 1.5rem;
+        margin-right: 0.75rem;
+    }
+    .ai-feature-header h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #374151;
+        margin: 0;
+    }
+    .ai-feature-description {
+        color: #6B7280;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+    }
+    .ai-feature-status {
+        display: flex;
+        justify-content: flex-end;
+    }
+    .status-indicator {
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    .status-indicator.placeholder {
+        background: #FEF3C7;
+        color: #92400E;
+        border: 1px solid #F59E0B;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">🚀 Generated Tweet Campaigns</h1>
+                <p class="opacity-90">AI-generated content batches ready for review and deployment</p>
+            </div>
+            <button class="btn" style="background: #10B981; color: white; padding: 0.75rem 1.5rem;" onclick="showCreateCampaignModal()">
+                ➕ Create New Campaign
+            </button>
+        </div>
+    </div>
+
+    <!-- AI Integration Interface -->
+    <div class="ai-integration-section">
+        <div class="batch-card" style="border-left: 4px solid #8B5CF6;">
+            <div class="batch-header">
+                <div>
+                    <h2 class="batch-title" style="color: #8B5CF6;">🧠 AI Integration Hub</h2>
+                    <p class="text-gray-600">Connect with Google Gemini API for intelligent tweet generation</p>
+                </div>
+                <div class="batch-badge" style="background: #8B5CF6; color: white;">Placeholder</div>
+            </div>
+            
+            <div class="ai-features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="ai-feature-card">
+                    <div class="ai-feature-header">
+                        <span class="ai-feature-icon">🎯</span>
+                        <h3>Sentiment Analysis</h3>
+                    </div>
+                    <p class="ai-feature-description">Analyze tweet sentiment and brand alignment using Google Gemini 2.5 Pro</p>
+                    <div class="ai-feature-status">
+                        <span class="status-indicator placeholder">⚠️ Requires API Setup</span>
+                    </div>
+                </div>
+                
+                <div class="ai-feature-card">
+                    <div class="ai-feature-header">
+                        <span class="ai-feature-icon">✨</span>
+                        <h3>Content Generation</h3>
+                    </div>
+                    <p class="ai-feature-description">Generate brand-aligned tweets based on scraped data and themes</p>
+                    <div class="ai-feature-status">
+                        <span class="status-indicator placeholder">⚠️ Requires API Setup</span>
+                    </div>
+                </div>
+                
+                <div class="ai-feature-card">
+                    <div class="ai-feature-header">
+                        <span class="ai-feature-icon">🔍</span>
+                        <h3>Topic Modeling</h3>
+                    </div>
+                    <p class="ai-feature-description">Extract trending topics and themes from scraped tweet data</p>
+                    <div class="ai-feature-status">
+                        <span class="status-indicator placeholder">⚠️ Requires API Setup</span>
+                    </div>
+                </div>
+                
+                <div class="ai-feature-card">
+                    <div class="ai-feature-header">
+                        <span class="ai-feature-icon">📊</span>
+                        <h3>Brand Alignment</h3>
+                    </div>
+                    <p class="ai-feature-description">Score tweets for CoopHive brand alignment and voice consistency</p>
+                    <div class="ai-feature-status">
+                        <span class="status-indicator placeholder">⚠️ Requires API Setup</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ai-setup-notice" style="background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 0.75rem; padding: 1.5rem; text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔑</div>
+                <h3 style="color: #92400E; margin-bottom: 0.5rem;">API Configuration Required</h3>
+                <p style="color: #A16207; margin-bottom: 1rem;">
+                    To enable AI-powered tweet generation, you'll need to configure your Google Gemini API credentials.
+                    This feature will connect to Google's Gemini 2.5 Pro and Flash models for advanced content analysis and generation.
+                </p>
+                <button class="btn" style="background: #8B5CF6; color: white; padding: 0.75rem 1.5rem;" onclick="showAPISetupModal()">
+                    🛠️ Configure AI Integration
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% if campaign_batches %}
+        {% for batch in campaign_batches %}
+        <div class="batch-card">
+            <!-- Batch Header -->
+            <div class="batch-header">
+                <div>
+                    <div class="batch-title">
+                        {{ batch.title }} - {{ batch.created_at|date:"M d" }} ({{ batch.total_tweets }} tweets)
+                        <span class="text-yellow-500">✏️</span>
+                    </div>
+                    <div class="batch-meta">
+                        <span class="batch-badge badge-{{ batch.status|lower|cut:' '|default:'draft' }}">
+                            {% if batch.source_type == "multi_agent_automation" %}📊 API Batch{% else %}📝 {{ batch.status }}{% endif %}
+                        </span>
+                        <span class="ml-2">📅 {{ batch.batch_id }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Description -->
+            <div class="batch-description">
+                {{ batch.description }}
+            </div>
+
+            <!-- Batch Meta Info -->
+            <div class="batch-meta">
+                <strong>Created:</strong> {{ batch.created_at|date:"l F j, Y \a\t g:i:s A, H:i:s" }}<br>
+                <strong>{{ batch.total_tweets }} tweets total</strong>
+                {% if batch.brand_alignment_score %}
+                    📊 <strong>Brand Score:</strong> {{ batch.brand_alignment_score }}/10
+                {% endif %}
+            </div>
+
+            <!-- Batch Actions -->
+            <div class="batch-actions">
+                <a href="{% url 'twitter:campaign_review' batch.batch_id %}" class="btn btn-review">
+                    📝 Review
+                </a>
+                <button class="btn btn-soft-delete" onclick="softDelete('{{ batch.batch_id }}')">
+                    🗑️ Soft Delete
+                </button>
+                <button class="btn btn-hard-delete" onclick="confirmHardDelete('{{ batch.batch_id }}')">
+                    ⚠️ Hard Delete
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">📭</div>
+            <h2 class="text-2xl font-bold mb-4">No Campaign Batches Yet</h2>
+            <p class="mb-4">
+                Campaign batches will appear here when the n8n AI workflow generates new content.
+            </p>
+            <p class="text-sm">
+                The system monitors influencer accounts every 8 hours and generates brand-aligned tweets automatically.
+            </p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Create Campaign Modal -->
+<div id="createCampaignModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000;">
+    <div class="modal-content" style="background: white; border-radius: 1rem; padding: 2rem; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb;">
+            <h2 style="color: #10B981; font-size: 1.5rem; font-weight: 600; margin: 0;">➕ Create New Campaign</h2>
+            <button onclick="closeCreateCampaignModal()" style="background: none; border: none; font-size: 1.5rem; color: #6b7280; cursor: pointer;">&times;</button>
+        </div>
+        
+        <form id="createCampaignForm" style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div>
+                <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Campaign Title</label>
+                <input type="text" id="campaignTitle" placeholder="e.g., Q1 2025 Brand Awareness" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem;">
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Description</label>
+                <textarea id="campaignDescription" rows="3" placeholder="Brief description of campaign goals and target audience..." style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem; resize: vertical;"></textarea>
+            </div>
+            
+            <div>
+                <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Content Source</label>
+                <select id="contentSource" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem;">
+                    <option value="scraped_tweets">Based on Scraped Tweets</option>
+                    <option value="manual_topics">Manual Topic Input</option>
+                    <option value="ai_generated">AI-Generated Themes</option>
+                    <option value="mixed_approach">Mixed Approach</option>
+                </select>
+            </div>
+            
+            <div id="manualTopicsSection" style="display: none;">
+                <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Topics/Themes (comma-separated)</label>
+                <input type="text" id="manualTopics" placeholder="e.g., blockchain, decentralization, community building" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem;">
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Target Tweet Count</label>
+                    <input type="number" id="tweetCount" min="1" max="50" value="10" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem;">
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">Priority Level</label>
+                    <select id="priorityLevel" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem;">
+                        <option value="standard">Standard</option>
+                        <option value="high">High Priority</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="background: #f3f4f6; padding: 1rem; border-radius: 0.5rem;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #374151;">Campaign Features:</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.875rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="enableSentiment" checked> Sentiment Analysis
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="enableBrandAlign" checked> Brand Alignment
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="enableHashtags" checked> Auto Hashtags
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="enableScheduling"> Auto Scheduling
+                    </label>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" onclick="closeCreateCampaignModal()" style="padding: 0.75rem 1.5rem; background: #6b7280; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">Cancel</button>
+                <button type="submit" style="padding: 0.75rem 1.5rem; background: #10B981; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">🚀 Create Campaign</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function softDelete(batchId) {
+    if (confirm('Soft delete this campaign batch? It will be hidden but can be recovered.')) {
+        // TODO: Implement soft delete API call
+        console.log('Soft delete:', batchId);
+        alert('Soft delete functionality coming soon!');
+    }
+}
+
+function confirmHardDelete(batchId) {
+    if (confirm('PERMANENTLY delete this campaign batch? This cannot be undone!')) {
+        if (confirm('Are you absolutely sure? This will delete all tweets and data.')) {
+            // TODO: Implement hard delete API call
+            console.log('Hard delete:', batchId);
+            alert('Hard delete functionality coming soon!');
+        }
+    }
+}
+
+// AI Setup Modal Functions
+function showAPISetupModal() {
+    alert(`🔧 AI Integration Setup
+
+This feature will enable:
+• Google Gemini 2.5 Pro integration for sentiment analysis
+• Automated tweet generation based on brand guidelines
+• Topic modeling and trend analysis
+• Brand alignment scoring
+
+Setup Requirements:
+1. Google Cloud Project with Gemini API enabled
+2. API credentials configured in Django settings
+3. Database-backed API key management
+
+Implementation Status: Placeholder
+External API integration requires additional configuration beyond local development scope.
+
+This interface demonstrates the planned AI features that will connect to Google's Gemini models for intelligent content generation and analysis.`);
+}
+
+// Campaign Creation Modal Functions
+function showCreateCampaignModal() {
+    document.getElementById('createCampaignModal').style.display = 'flex';
+}
+
+function closeCreateCampaignModal() {
+    document.getElementById('createCampaignModal').style.display = 'none';
+    // Reset form
+    document.getElementById('createCampaignForm').reset();
+    document.getElementById('manualTopicsSection').style.display = 'none';
+}
+
+// Handle content source change
+document.addEventListener('DOMContentLoaded', function() {
+    const contentSource = document.getElementById('contentSource');
+    const manualTopicsSection = document.getElementById('manualTopicsSection');
+    
+    contentSource.addEventListener('change', function() {
+        if (this.value === 'manual_topics') {
+            manualTopicsSection.style.display = 'block';
+        } else {
+            manualTopicsSection.style.display = 'none';
+        }
+    });
+    
+    // Handle form submission
+    document.getElementById('createCampaignForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            title: document.getElementById('campaignTitle').value,
+            description: document.getElementById('campaignDescription').value,
+            content_source: document.getElementById('contentSource').value,
+            manual_topics: document.getElementById('manualTopics').value,
+            tweet_count: document.getElementById('tweetCount').value,
+            priority_level: document.getElementById('priorityLevel').value,
+            features: {
+                sentiment_analysis: document.getElementById('enableSentiment').checked,
+                brand_alignment: document.getElementById('enableBrandAlign').checked,
+                auto_hashtags: document.getElementById('enableHashtags').checked,
+                auto_scheduling: document.getElementById('enableScheduling').checked
+            }
+        };
+        
+        // Validate required fields
+        if (!formData.title.trim()) {
+            alert('Please enter a campaign title.');
+            return;
+        }
+        
+        if (formData.content_source === 'manual_topics' && !formData.manual_topics.trim()) {
+            alert('Please enter topics/themes for manual topic input.');
+            return;
+        }
+        
+        // Show creation feedback
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = '🔄 Creating...';
+        submitBtn.disabled = true;
+        
+        // Simulate API call (placeholder)
+        setTimeout(() => {
+            alert(`✅ Campaign Created Successfully!
+
+Title: ${formData.title}
+Description: ${formData.description}
+Source: ${formData.content_source}
+Tweet Count: ${formData.tweet_count}
+Priority: ${formData.priority_level}
+
+The campaign has been queued for processing. AI-generated tweets will appear in the campaign list once processing is complete.
+
+Note: This is a placeholder implementation. In production, this would create a new CampaignBatch record and trigger the AI generation pipeline.`);
+            
+            closeCreateCampaignModal();
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        }, 2000);
+    });
+});
+
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('createCampaignModal');
+    if (event.target === modal) {
+        closeCreateCampaignModal();
+    }
+});
+</script>
+{% endblock %}

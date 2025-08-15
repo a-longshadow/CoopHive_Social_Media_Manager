@@ -1,0 +1,683 @@
+{
+  "name": "X Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# Project Documentation\n\n## CoopHive Social Media Intelligence System\n**Version**: 10.0 | **Type**: Automated Social Listening & Content Generation\n\n### Overview:\nThis n8n workflow automates CoopHive's social media strategy through intelligent content generation based on real-time social listening. The system monitors key Web3/AI accounts (ETHGlobal, encodeclub, FILBuilders), analyzes engagement patterns, and generates brand-aligned tweets using AI.\n\n### Core Functionality:\n\n* **Social Listening**: Scrapes tweets from target accounts every 8 hours.\n* **Duplicate Prevention**: Checks existing data to avoid reprocessing.\n* **Intelligent Analysis**: Aggregates tweets, calculates engagement scores, and identifies themes.\n* **AI Content Generation**: Creates 3 original tweets using CoopHive's brand voice and Discord patterns.\n* **Multi-Channel Distribution**: Delivers content via email reports, Google Sheets storage, and planned Telegram notifications.\n\n### Key Features:\n\n* **Engagement Scoring**: Formula-based ranking (Likes×1 + Retweets×2 + Replies×3 + Quotes×4 + Views/1000).\n* **Theme Extraction**: Automated categorization (AI/ML, Blockchain/Web3, Developer Community, Infrastructure).\n* **Brand Voice Integration**: Authentic Discord conversational patterns and technical terminology.\n* **Content Management**: Structured storage with approval workflow support.\n* **Performance Tracking**: Campaign batch tracking and metrics collection.\n\n### Technical Stack:\n\n* **Trigger**: Schedule-based (8-hour intervals).\n* **APIs**: TwitterAPI.io for data collection.\n* **AI**: Google Gemini for content generation.\n* **Storage**: Google Sheets with comprehensive metadata.\n* **Notifications**: Gmail with professional HTML formatting.\n\n### Business Impact:\n\nTransforms manual social media management into an automated, data-driven system that maintains authentic brand voice while scaling content production. Enables strategic engagement with the Web3 developer community through contextually relevant, technically precise content.",
+        "height": 640,
+        "width": 1160,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        40,
+        -500
+      ],
+      "id": "54ac4733-9e83-462b-ac1f-ee6311badb72",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## LOAD\n",
+        "height": 1060,
+        "width": 580,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2540,
+        300
+      ],
+      "id": "9dfe21d5-1b12-4f1c-929b-cfa2b4b0c194",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        980
+      ],
+      "id": "e5db60d5-568a-4a04-ad9f-52e879ca4c9b",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "G2qzH1zqSv7JmOPg",
+          "name": "Google Gemini(PaLM) Api "
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// List of Twitter accounts to fetch (add or remove as needed)\nconst accounts = [\n  // 1) @Kai Fu Lee\n { userId: '50940456' },\n\n  // 2) @Andrew Ng\n { userId: '216939636' },\n\n// 3) @Demis Hassabis\n  { userId: '1482581556' },\n  \n// 4) @Jeremy Howard\n  { userId: '175282603' },\n\n// 5) @DeepLearningAI\n  //{ userId: '992153930095251456' },\n\n// 6) @hugo_larochelle\n // { userId: '3333052551' },\n\n// 7) @lexfridman\n //{ userId: '427089628' },\n\n// 8) @drfeifei\n //{ userId: '130745589' },\n\n// 9) @karpathy\n // { userId: '33836629' },\n\n// 10) @KirkDBorne\n // { userId: '534563976' },\n  \n  // 11) add more below:\n  // { userId: '1234567890' }, // @some_other_user\n];\n\n// Emit one item per account\nreturn accounts.map(acc => ({\n  json: {\n    userId: acc.userId,\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        620
+      ],
+      "id": "2f27a46c-5d36-48dc-ab75-ca8ec63b6d6e",
+      "name": "Serve UserIDs"
+    },
+    {
+      "parameters": {
+        "url": "https://api.twitterapi.io/twitter/user/last_tweets",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "userId",
+              "value": "={{ $json.userId }}"
+            },
+            {
+              "name": "includeReplies",
+              "value": "false"
+            },
+            {
+              "name": "includeRetweets",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          },
+          "pagination": {
+            "pagination": {
+              "paginationMode": "responseContainsNextURL",
+              "nextURL": "={{ $response.body.has_next_page == false }}",
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ $response.body.has_next_page == false }}",
+              "limitPagesFetched": true,
+              "maxRequests": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        740
+      ],
+      "id": "0c7c109a-3901-440c-b924-36c70ff23f79",
+      "name": "HTTP Request Tweets  ←── split batch item drives userId={{ $json.userId }}",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "btZkKDlWtadFfXw1",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================================\n// UPDATED N8N CODE NODE: \"Code (map API response → your Tweet ID / URL / Content JSON)\"\n// Phase 1 Implementation: Security & Foundation\n// ============================================================================\n\n// Generate secure execution ID for tracking and security\nfunction generateExecutionId() {\n  const timestamp = new Date().toISOString().replace(/[:.]/g, '').replace('T', '_').slice(0, 15);\n  const randomId = Math.random().toString(36).substring(2, 10);\n  return `exec_${timestamp}_n8n_${randomId}`;\n}\n\n// N8N Function node: map HTTP responses (one per account) into flat tweets list\n// Enhanced with security payload structure for Flask API integration\nconst tweets = [];\n\nfor (const item of items) {\n  const resp = item.json;\n  // Safety-check\n  if (resp?.data?.tweets && Array.isArray(resp.data.tweets)) {\n    for (const t of resp.data.tweets) {\n      tweets.push({\n        // Original sheet columns maintained for compatibility\n        \"Tweet ID\":       t.id,\n        \"URL\":            t.url,\n        \"Content\":        t.text,\n        \"Likes\":          t.likeCount,\n        \"Retweets\":       t.retweetCount,\n        \"Replies\":        t.replyCount,\n        \"Quotes\":         t.quoteCount,\n        \"Views\":          t.viewCount,\n        \"Date\":           t.createdAt,\n        \"Status\":         resp.status,       // e.g. \"success\"\n        \"Tweet\":          t.twitterUrl       // full twitter.com link\n      });\n    }\n  }\n}\n\n// Generate secure execution ID for this batch\nconst executionId = generateExecutionId();\n\n// Package data with security payload structure for Flask API\nconst securityPayload = {\n  execution_id: executionId,\n  source_url: \"https://n8n.coophive.network\", // Update with your actual n8n instance URL\n  tweets: tweets,\n  // Additional metadata for tracking\n  batch_metadata: {\n    total_tweets: tweets.length,\n    processing_timestamp: new Date().toISOString(),\n    accounts_processed: items.length,\n    n8n_workflow_id: $workflow.id || 'unknown',\n    n8n_execution_id: $execution.id || 'unknown'\n  }\n};\n\n// Debug logging\nconsole.log(`DEBUG: Generated execution_id: ${executionId}`);\nconsole.log(`DEBUG: Processed ${tweets.length} tweets from ${items.length} accounts`);\nconsole.log(`DEBUG: Security payload ready for Flask API`);\n\n// Return the security payload as a single item for the HTTP Request node\nreturn [{\n  json: securityPayload\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        20,
+        420
+      ],
+      "id": "066fec92-ec6b-4726-a6e7-c2bbec2079e2",
+      "name": "Code (map API response → your Tweet ID / URL / Content JSON)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Multi-Agent Output Processor - Handle new brand-aligned format\nconst processMultiAgentOutput = function() {\n  try {\n    // Get the multi-agent output from the first input item\n    const multiAgentOutput = $input.first().json.output || $input.first().json;\n    \n    let jsonContent = multiAgentOutput;\n    \n    // Remove markdown code block wrapper if present\n    if (typeof jsonContent === 'string') {\n      // Remove ```json and ``` markers\n      jsonContent = jsonContent.replace(/```json\\s*/g, '').replace(/```\\s*$/g, '');\n      \n      // Find the first { and last } to extract just the JSON\n      const firstBrace = jsonContent.indexOf('{');\n      const lastBrace = jsonContent.lastIndexOf('}');\n      \n      if (firstBrace !== -1 && lastBrace !== -1) {\n        jsonContent = jsonContent.substring(firstBrace, lastBrace + 1);\n      }\n    }\n    \n    console.log('DEBUG: Cleaned JSON content length:', jsonContent.length);\n    console.log('DEBUG: JSON content preview:', jsonContent.substring(0, 200) + '...');\n    \n    // Parse the JSON content\n    const parsedData = typeof jsonContent === 'string' ? JSON.parse(jsonContent) : jsonContent;\n    \n    console.log('DEBUG: Successfully parsed multi-agent output');\n    console.log('DEBUG: Final tweets count:', parsedData.final_tweets?.length || 0);\n    \n    // Return the multi-agent output for downstream processing\n    return [{\n      json: parsedData\n    }];\n    \n  } catch (error) {\n    console.error('Error processing multi-agent output:', error);\n    console.error('Input content preview:', JSON.stringify($input.first().json).substring(0, 500));\n    \n    return [{\n      json: {\n        error: true,\n        message: error.message,\n        type: \"multi_agent_processing_error\",\n        debug_info: {\n          input_type: typeof $input.first().json.output,\n          input_length: $input.first().json.output?.length || 0,\n          input_preview: $input.first().json.output?.substring(0, 200) || 'N/A'\n        }\n      }\n    }];\n  }\n};\n\nreturn processMultiAgentOutput();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1620,
+        1060
+      ],
+      "id": "30ee60f7-d36c-4062-a8f2-c6764d946a15",
+      "name": "Generated Tweets Processor"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform Tweet Data - Process Flask API Response\n// Extracts new_tweets from Flask duplicate-check response and formats for Batch Aggregator\n\nconst processFlaskResponse = function() {\n  try {\n    // Get the Flask API response from the first input item\n    const flaskResponse = $input.first().json;\n    \n    // Handle both array format [{}] and direct object format {}\n    let responseData;\n    if (Array.isArray(flaskResponse) && flaskResponse.length > 0) {\n      responseData = flaskResponse[0]; // Extract first object from array\n    } else {\n      responseData = flaskResponse;\n    }\n    \n    // Extract new tweets from the Flask response\n    const newTweets = responseData.data?.new_tweets || [];\n    const executionId = responseData.data?.execution_id || 'unknown';\n    const sourceUrl = responseData.data?.source_url || 'unknown';\n    \n    console.log(`DEBUG: Processing ${newTweets.length} new tweets from Flask API`);\n    console.log(`DEBUG: Execution ID: ${executionId}`);\n    console.log(`DEBUG: Duplicates found: ${responseData.summary?.duplicates_found || 0}`);\n    \n    // Transform each new tweet to the expected format for Batch Aggregator\n    const transformedTweets = newTweets.map(tweet => ({\n      json: {\n        'Tweet ID': tweet['Tweet ID'],\n        'URL': tweet.URL,\n        'Content': tweet.Content,\n        'Likes': tweet.Likes || 0,\n        'Retweets': tweet.Retweets || 0,\n        'Replies': tweet.Replies || 0,\n        'Quotes': tweet.Quotes || 0,\n        'Views': tweet.Views || 0,\n        'Date': tweet.Date,\n        'Tweet': tweet.Tweet,\n        'Status': tweet.Status || 'success',\n        // Additional metadata from Flask response\n        'Execution_ID': executionId,\n        'Source_URL': sourceUrl,\n        'Processed_At': new Date().toISOString()\n      }\n    }));\n    \n    // Log processing results\n    console.log(`DEBUG: Transformed ${transformedTweets.length} tweets for Batch Aggregator`);\n    console.log(`DEBUG: Flask API Status: ${responseData.status}`);\n    console.log(`DEBUG: Flask Message: ${responseData.message}`);\n    \n    return transformedTweets;\n    \n  } catch (error) {\n    console.error('Error processing Flask API response:', error);\n    \n    // Return error object for debugging\n    return [{\n      json: {\n        error: true,\n        message: `Transform Tweet Data Error: ${error.message}`,\n        type: \"flask_response_processing_error\",\n        debug_info: {\n          input_structure: Object.keys($input.first().json),\n          input_sample: JSON.stringify($input.first().json).substring(0, 500)\n        }\n      }\n    }];\n  }\n};\n\n// Execute the processing and return results\nreturn processFlaskResponse();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        420
+      ],
+      "id": "ad76575f-73ed-4a09-93dd-14211b2c2f83",
+      "name": "Transform Tweet Data"
+    },
+    {
+      "parameters": {
+        "content": "## EXTRACT\n",
+        "height": 720,
+        "width": 1500,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        280
+      ],
+      "id": "caec7b9c-a390-439d-8b95-0525e2572361",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## TRANSFORM\n",
+        "height": 1320,
+        "width": 1560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        780,
+        180
+      ],
+      "id": "14b0c0c1-c982-4560-b3b0-00903ba1a3f7",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "sendTo": "joe@coophive.network",
+        "subject": "=🚀 CoopHive Brand-Aligned Content - {{ $json.brand_alignment_analysis.batch_cyber_architect_avg }}/10 Score",
+        "message": "={{ $json.email_html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2720,
+        640
+      ],
+      "id": "6bcd2d22-8bc6-4b70-bfc8-bebfa388793f",
+      "name": "Gmail Notification",
+      "webhookId": "4802eaf7-0ba1-41c9-9bd5-3b7737db93c6",
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Nqhp2cKQjkJnSrng",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://x-bot-production-1e34.up.railway.app/api/receive-tweets",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $input.first().json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2740,
+        1060
+      ],
+      "id": "1df726f2-f55a-4046-a176-98382c9c3cc6",
+      "name": "POST to WebApp"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# 🔻 COMPREHENSIVE PROMPT – COOPHIVE BRAND‑EXPERT AGENT 🔻\n\n## ==== SYSTEM ====\n\nYou are *CoopHive’s Brand Alignment Specialist* – guardian of the “Cyber Architect” voice.\nYour mission is to transform the **JSON output** from the upstream **Twitter‑expert agent** into Tweets that:\n\n* embody the Cyber Architect persona: precise, blueprint‑oriented, visionary, “Design the rails, then flip the switch.”\n* foreground CoopHive’s differentiators (agent‑first architecture, game‑theoretic primitives, marketplace composability).\n* map each Tweet to a clear audience + CTA drawn from CoopHive’s brand playbook (Scientists = “Compute Without Queues”, Data Centers = “Idle Racks, Instant Revenue”, Builders = “Ship Markets, Skip Infra”, Agents = “Deals Beyond Human Reach”).\n* retain (or improve) the engagement mechanics supplied by the Twitter expert (hook, length, trending tag, predicted score).\n* stay ≤ 280 characters, max 1 hashtag, max 1 mention.\n* add/adjust media alt‑text only when beneficial; never drop a media instruction required by the upstream agent.\n\nReturn **only** the JSON described below – no markdown, no comments.\n\n## ==== INPUT ====\n\nYou receive exactly the object produced by the Twitter‑expert agent, e.g.:\n\n```json\n{\n  \"input_tweet_analysis\": {},\n  \"generated_tweets\": [ {}, {}, {} ],\n  \"twitter_strategy\": \"...\",\n  \"coophive_opportunity\": \"...\"\n}\nAll fields are available via n8n variables, e.g. {{$json[\"generated_tweets\"][0][\"content\"]}}.\n\n==== TASKS ====\nValidate the inbound JSON; if malformed, raise \"error\":\"invalid_format\" in output.\nAnalyse each candidate tweet for:\n\nCyber Architect tone (0‑10)\n\nAgent‑first emphasis (0‑10)\n\nMarketplace‑composability clarity (0‑10)\n\nAudience‑CTA fit (0‑10)\nRefine wording to maximise those four dimensions without exceeding 280 chars or weakening the engagement hook / trending alignment.\nInsert one audience‑specific CTA (see list above) if missing; keep it punchy (≤ 40 chars).\nEnsure jargon is technically accurate (IPFS CID, Bacalhau job‑ID, solver network hash, etc.).\nPreserve / adjust media block:\n\nIf media.action = \"reuse\", leave unchanged unless alt‑text missing.\n\nIf \"new\", ensure alt_text ≤ 1000 chars and media type matches.\n\nScore each refined tweet on brand metrics and predict any engagement loss/gain (‑1/0/+1).\nReturn the JSON schema below.\n\n==== OUTPUT JSON SCHEMA ====\n{\n  \"brand_alignment_analysis\": {\n    \"batch_cyber_architect_avg\": \"<float 0‑10>\",\n    \"notes\": \"<short observation on common issues>\"\n  },\n  \"final_tweets\": [\n    {\n      \"content\": \"<string ≤280 chars>\",\n      \"audience\": \"<Scientists|Data Centers|Technical Builders|Agents>\",\n      \"cta\": \"<inline CTA text>\",\n      \"cyber_architect_score\": \"<integer 0‑10>\",\n      \"agent_first_score\": \"<integer 0‑10>\",\n      \"composability_score\": \"<integer 0‑10>\",\n      \"audience_fit_score\": \"<integer 0‑10>\",\n      \"engagement_delta\": \"<-1|0|+1>\",\n      \"media\": {\n        \"action\": \"<reuse|new|none>\",\n        \"type\": \"<image|video|pdf|url|none>\",\n        \"url\": \"<string or null>\",\n        \"alt_text\": \"<string or null>\"\n      },\n      \"character_count\": \"<integer>\"\n    }\n  ],\n  \"revision_summary\": \"<≤140 chars on what changed & why>\"\n}\nReturn exactly this JSON; no markdown, no extra text.\n\n==== BRAND‑SCORING HINTS ====\ncyber_architect_score = tone_precision (30%) + visionary_clarity (30%) + blueprint_fluency (40%)\nagent_first_score = explicit agent‑centric phrasing? (yes=10 / partial=5 / none=0)\ncomposability_score = mentions primitives, modular markets, or swap flexibility (0‑10)\naudience_fit_score = CTA relevance to persona pain‑point (0‑10)\nengagement_delta = compare new character_count & hook strength vs. original\n\n==== END ====",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        1060
+      ],
+      "id": "ebc94b20-721d-4180-9d5f-cfbf29db0034",
+      "name": "AI Agent - brand expert"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\n## ==== SYSTEM ====\n\nYou are *CoopHive’s Twitter Engagement Specialist*.\nYour mission is to turn a **source tweet** (or list of tweets) delivered as JSON into **three (3) new tweets** that maximise:\n\n* Visibility in the 2025 “For You” algorithm (reply > quote > retweet > like > video‑view weighting).\n* Hook‑driven interaction (questions, polls, bold claims).\n* The 260‑280 character dwell‑time sweet‑spot.\n* Alignment with 2025 Web3/AI trends (#DePIN, #AgentEconomy, tokenised RWA, solver networks).\n* Technical credibility for senior builders (IPFS CID, ZK‑proof attestation, Bacalhau job‑ID syntax).\n\n**Ignore CoopHive brand voice for now** – brand alignment runs in a later agent.\nNever exceed 280 characters, and add **max one** trending hashtag & **max one** mention per tweet.\nIf media is supplied (image, video, PDF, generic URL), you **must** output handling instructions (see schema).\nReturn **only** the JSON described – no markdown, no prose.\n\n# SENTIMENT CONTEXT\n\n## SENTIMENT CONTEXT AVAILABLE\nYou now have access to sentiment analysis data:\n- SENTIMENT = {{ $json.sentiment_analysis.overall_sentiment }}\n- EMOTIONAL_TONE = {{ $json.sentiment_analysis.emotional_tone }}\n- ENGAGEMENT_FACTORS = {{ $json.sentiment_analysis.engagement_factors }}\n- COOPHIVE_RELEVANCE = {{ $json.sentiment_analysis.coophive_relevance }}\n- KEY_THEMES = {{ $json.sentiment_analysis.key_themes }}\n\n## ORIGINAL DATA STILL AVAILABLE\nTWEET_CONTENT = {{ $json.Content }}\nNUMBER_OF_LIKES = {{ $json.Likes }}\nNUMBER_OF_RETWEETS = {{ $json.Retweets }}\nNUMBER_OF_REPLIES = {{ $json.Replies }}\nNUMBER_OF_VIEWS = {{ $json.Views }}\nDATE_OF_TWEET_CREATION = {{ $json.Date }}\n\n## ENHANCED INSTRUCTIONS\nUse sentiment analysis to:\n1. **Match Emotional Tone**: If source is optimistic, make your tweets optimistic\n2. **Leverage Engagement Factors**: Amplify what made the original engaging\n3. **Theme Alignment**: Connect to the key themes identified\n4. **Relevance Boost**: If CoopHive relevance is high, emphasize decentralized computing angles\n\n\n## ==== INPUT ====\n\nYou receive EITHER\n* **a single JSON object** representing one tweet **OR**\n* **an array** of such objects.\n\nExample (array length 1):\n\n```json\n[\n  {\n    \"Tweet ID\": \"1952950158196396153\",\n    \"URL\": \"[https://x.com/KirkDBorne/status/1952950158196396153](https://x.com/KirkDBorne/status/1952950158196396153)\",\n    \"Content\": \".@SciSpace_ Agent, the #AI Co‑Scientist built for researchers, is now live on Product Hunt...\",\n    \"Likes\": 9,\n    \"Retweets\": 5,\n    \"Replies\": 0,\n    \"Quotes\": 0,\n    \"Views\": 2361,\n    \"Date\": \"2025-08-06T04:29:36Z\",\n    \"Media\": [\n      {\n        \"type\": \"image\",\n        \"url\": \"[https://pbs.twimg.com/media/ExampleImage.jpg](https://pbs.twimg.com/media/ExampleImage.jpg)\"\n      }\n    ],\n    \"Source_URL\": \"[https://n8n.coophive.network](https://n8n.coophive.network)\",\n    \"Processed_At\": \"2025-08-06T08:17:20.082Z\"\n  }\n]\n\nIf an array is delivered, process only the first element – downstream n8n looping guarantees one‑at‑a‑time handling.\n\nAll fields are available inside n8n via e.g. {{$json[\"Content\"]}}.\n\n==== TASKS ====\nAnalyse topic, engagement potential, link/media presence and relevance to programmable‑compute markets.\nGenerate three tweets that:\n\nRe‑frame or reply to the topic (never copy wording verbatim).\n\nInclude a strong hook in the first 12 words.\n\nEnd with a CTA (ask to reply, quote, build, etc.).\n\nEmbed one trend tag or mention from {#DePIN, #AgentEconomy, #RWA, @BacalhauProject, @Filecoin}.\n\nHandle media:\n\nIf original tweet contains Media, decide whether to reuse (RT‑style commentary) or replace with new media.\n\nFor images/GIFs: supply alt_text ≤1000 chars.\n\nFor video: reference as type:\"video\" – Twitter auto‑thumbnail suffices.\n\nFor PDF/URL: summarise in ≤75 chars; include link in tweet text.\n\nPredict engagement score 0‑10 using scoring hints.\nOutput exactly the JSON schema below.\n\n==== OUTPUT JSON SCHEMA ====\n{\n  \"input_tweet_analysis\": {\n    \"original_content\": \"<string>\",\n    \"engagement_potential\": \"<high|medium|low>\",\n    \"trending_relevance\": \"<AI|DePIN|AgentEconomy|Other>\",\n    \"technical_audience_fit\": \"<advanced|intermediate|beginner>\",\n    \"coophive_theme_connection\": \"<how this links to programmable markets>\",\n    \"media_detected\": \"<none|image|video|pdf|mixed>\"\n  },\n  \"generated_tweets\": [\n    {\n      \"content\": \"<max 280 chars>\",\n      \"engagement_prediction\": <integer 0‑10>,\n      \"hook_type\": \"<question|statement|CTA|insight>\",\n      \"technical_credibility\": \"<strong|moderate>\",\n      \"reasoning\": \"<1‑sentence why this works>\",\n      \"character_count\": <integer>,\n      \"trending_alignment\": \"<AI|DePIN|RWA|AgentEconomy>\",\n      \"audience_target\": \"<Technical Builders|Scientists|Data Centers>\",\n      \"media\": {\n        \"action\": \"<reuse|new|none>\",\n        \"type\": \"<image|video|pdf|url|none>\",\n        \"url\": \"<string or null>\",\n        \"alt_text\": \"<string or null>\"\n      }\n    }\n  ],\n  \"twitter_strategy\": \"<short paragraph explaining hook, CTA, media logic>\",\n  \"coophive_opportunity\": \"<how CoopHive could join or extend this conversation>\"\n}\n==== SCORING HINTS ====\n\nbase = (Likes*1 + Retweets*2 + Replies*3 + Quotes*4 + Views/1000) / 100\npred = clamp(round(base), 0, 10)\n\n==== ACTUAL PAYLOAD ====\nURL = {{ $json.URL }}\nTWEET_CONTENT = {{ $json.Content }}\nNUMBER_OF_LIKES = {{ $json.Likes }}\nNUMBER_OF_RETWEETS = {{ $json.Retweets }}\nNUMBER_OF_REPLIES{{ $json.Replies }}\nNUMBER_OF_VIEWS{{ $json.Views }}\nDATE_OF_TWEET_CREATION = {{ $json.Date }}\n\n\n==== END ====",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        740
+      ],
+      "id": "a5075299-8012-42a9-a5a8-3c0f329889e1",
+      "name": "AI Agent --> x.com expert"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://x-bot-production-1e34.up.railway.app/api/check-duplicate-tweet",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "=X-Execution-ID",
+              "value": "={{ $json.execution_id }}"
+            },
+            {
+              "name": "User-Agent",
+              "value": "N8N-CoopHive-Social-Listener/1.0"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        420
+      ],
+      "id": "3a254ccf-f89a-462b-9118-e72fc0116711",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "fw2wjUz5GutZeItY",
+          "name": "CoopHive Flask API Auth "
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform Multi-Agent Output to Flask API Format\nconst transformToFlaskFormat = function() {\n  try {\n    const multiAgentData = $input.first().json;\n    const currentDate = new Date();\n    const campaignBatch = 'batch_' + currentDate.toISOString().split('T')[0] + '_' + currentDate.toISOString().split('T')[1].substring(0, 5).replace(':', '-');\n    \n    // Transform final_tweets to expected Flask format\n    const transformedTweets = multiAgentData.final_tweets.map(function(tweet, index) {\n      // Map audience to type\n      const audienceToType = {\n        'Scientists': 'scientific_compute',\n        'Data Centers': 'infrastructure_optimization', \n        'Technical Builders': 'developer_tools',\n        'Agents': 'autonomous_systems'\n      };\n      \n      // Generate coophive_elements based on audience and CTA\n      const coophiveElements = [];\n      if (tweet.audience === 'Scientists') coophiveElements.push('agent-first', 'compute-orchestration', 'queue-elimination');\n      if (tweet.audience === 'Data Centers') coophiveElements.push('marketplace-composability', 'revenue-optimization', 'idle-capacity');\n      if (tweet.audience === 'Technical Builders') coophiveElements.push('game-theoretic-primitives', 'marketplace-design', 'infra-abstraction');\n      if (tweet.audience === 'Agents') coophiveElements.push('autonomous-deals', 'solver-networks', 'beyond-human-reach');\n      \n      // Generate discord_voice_patterns based on cyber_architect_score\n      const voicePatterns = [];\n      if (tweet.cyber_architect_score >= 9) voicePatterns.push('blueprint-precision', 'architectural-clarity');\n      if (tweet.agent_first_score >= 9) voicePatterns.push('agent-centric', 'autonomous-orchestration');\n      if (tweet.composability_score >= 8) voicePatterns.push('modular-design', 'composable-primitives');\n      \n      return {\n        id: campaignBatch + '-tweet-' + (index + 1),\n        type: audienceToType[tweet.audience] || 'brand_aligned',\n        content: tweet.content,\n        character_count: tweet.character_count,\n        engagement_hook: tweet.cta,\n        coophive_elements: coophiveElements,\n        discord_voice_patterns: voicePatterns,\n        theme_connection: multiAgentData.revision_summary,\n        timestamp: currentDate.toISOString(),\n        ready_for_deployment: tweet.character_count <= 280,\n        campaign_batch: campaignBatch,\n        status: 'Brand Aligned',\n        is_edited: false\n      };\n    });\n\n    // Create Flask-compatible payload\n    const flaskPayload = {\n      campaign_batch: campaignBatch,\n      generated_at: currentDate.toISOString(),\n      analysis_summary: {\n        input_batch_size: transformedTweets.length,\n        dominant_themes: ['brand_alignment', 'cyber_architect', 'agent_first'],\n        top_engagement_score: Math.max(...multiAgentData.final_tweets.map(t => t.engagement_delta)),\n        content_strategy: 'Multi-agent brand alignment with Cyber Architect voice',\n        brand_alignment_score: multiAgentData.brand_alignment_analysis.batch_cyber_architect_avg\n      },\n      tweets: transformedTweets,\n      tweet_count: transformedTweets.length,\n      ready_for_deployment: transformedTweets.filter(t => t.ready_for_deployment).length,\n      title: \"Multi-Agent Brand-Aligned Content\",\n      description: \"AI-generated tweets optimized for CoopHive brand voice and audience targeting\",\n      source_type: \"multi_agent_automation\"\n    };\n\n    return [{\n      json: flaskPayload\n    }];\n    \n  } catch (error) {\n    console.error('Error transforming to Flask format:', error);\n    return [{\n      json: {\n        error: true,\n        message: error.message,\n        type: \"flask_transform_error\"\n      }\n    }];\n  }\n};\n\nreturn transformToFlaskFormat();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2060,
+        1060
+      ],
+      "id": "e04c3833-facf-4637-8f6a-cf2cac9adf90",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        1280
+      ],
+      "id": "f9b136c8-45af-4f8d-a713-b2365240ce3a",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "G2qzH1zqSv7JmOPg",
+          "name": "Google Gemini(PaLM) Api "
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -680,
+        620
+      ],
+      "id": "3a875cda-74b8-4453-95c7-b601d5da1ab6",
+      "name": "Schedule Trigger - runs daily"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -180,
+        620
+      ],
+      "id": "102ad912-5f06-40bc-acb1-34e7cb2b5276",
+      "name": "SplitInBatches --> UserID(batchSize=1)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter Latest 10 Tweets - Preserve Original Format\nconst filterLatestTweets = function() {\n  try {\n    // Get the input data from the previous node\n    const inputData = $input.first().json;\n    \n    // Extract tweets array\n    const allTweets = inputData.tweets || [];\n    \n    console.log(`DEBUG: Total tweets received: ${allTweets.length}`);\n    \n    // Sort tweets by date (newest first) and take latest 10\n    const sortedTweets = allTweets.sort((a, b) => {\n      const dateA = new Date(a.Date);\n      const dateB = new Date(b.Date);\n      return dateB - dateA; // Descending order (newest first)\n    });\n    \n    const latest10Tweets = sortedTweets.slice(0, 3);\n    \n    console.log(`DEBUG: Filtered to latest ${latest10Tweets.length} tweets`);\n    console.log(`DEBUG: Date range: ${latest10Tweets[latest10Tweets.length-1]?.Date} to ${latest10Tweets[0]?.Date}`);\n    \n    // Preserve the exact same structure as input\n    const filteredOutput = {\n      execution_id: inputData.execution_id,\n      source_url: inputData.source_url,\n      tweets: latest10Tweets,\n      batch_metadata: {\n        ...inputData.batch_metadata,\n        total_tweets: latest10Tweets.length,\n        original_total: allTweets.length,\n        filtering_applied: true,\n        filtering_timestamp: new Date().toISOString()\n      }\n    };\n    \n    return [{\n      json: filteredOutput\n    }];\n    \n  } catch (error) {\n    console.error('Error filtering latest tweets:', error);\n    return [{\n      json: {\n        error: true,\n        message: error.message,\n        type: \"tweet_filtering_error\",\n        debug_info: {\n          input_structure: Object.keys($input.first().json),\n          input_tweet_count: $input.first().json.tweets?.length || 0\n        }\n      }\n    }];\n  }\n};\n\nreturn filterLatestTweets();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        420
+      ],
+      "id": "8b5c7930-a10d-4912-b985-26f694dcc8f1",
+      "name": "FILTER LATEST 10 TWEETS"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Create Email HTML from Multi-Agent Output\nconst createBrandAlignedEmail = function() {\n  try {\n    const data = $input.first().json;\n    const currentDate = new Date().toLocaleDateString('en-US', { \n      weekday: 'long', \n      year: 'numeric', \n      month: 'long', \n      day: 'numeric' \n    });\n\n    let html = '<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>';\n    html += 'body { font-family: \"Segoe UI\", Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }';\n    html += '.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; text-align: center; margin-bottom: 30px; }';\n    html += '.header h1 { margin: 0; font-size: 28px; font-weight: 300; }';\n    html += '.summary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #667eea; }';\n    html += '.tweet-container { background: white; border: 1px solid #e1e8ed; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }';\n    html += '.tweet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }';\n    html += '.audience-tag { background: #667eea; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }';\n    html += '.score-tag { background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }';\n    html += '.tweet-content { font-size: 18px; line-height: 1.4; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 3px solid #1da1f2; }';\n    html += '.tweet-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }';\n    html += '.meta-item { background: #f8f9fa; padding: 10px; border-radius: 6px; }';\n    html += '.meta-label { font-weight: 600; color: #667eea; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }';\n    html += '.meta-value { font-size: 14px; }';\n    html += '.footer { text-align: center; margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 8px; color: #666; }';\n    html += '</style></head><body>';\n    \n    html += '<div class=\"header\"><h1>🚀 CoopHive Brand-Aligned Content</h1>';\n    html += '<p>Generated on ' + currentDate + ' • ' + data.final_tweets.length + ' Brand-Optimized Tweets</p></div>';\n    \n    html += '<div class=\"summary\"><h3>📊 Brand Alignment Analysis</h3>';\n    html += '<p><strong>Cyber Architect Score:</strong> ' + data.brand_alignment_analysis.batch_cyber_architect_avg + '/10</p>';\n    html += '<p><strong>Notes:</strong> ' + data.brand_alignment_analysis.notes + '</p>';\n    html += '<p><strong>Revision Summary:</strong> ' + data.revision_summary + '</p></div>';\n\n    data.final_tweets.forEach(function(tweet, index) {\n      html += '<div class=\"tweet-container\">';\n      html += '<div class=\"tweet-header\">';\n      html += '<span class=\"audience-tag\">' + tweet.audience + '</span>';\n      html += '<span class=\"score-tag\">CA: ' + tweet.cyber_architect_score + '/10</span>';\n      html += '</div>';\n      \n      html += '<div class=\"tweet-content\">\"' + tweet.content + '\"</div>';\n      \n      html += '<div class=\"tweet-meta\">';\n      html += '<div class=\"meta-item\"><div class=\"meta-label\">Character Count</div>';\n      html += '<div class=\"meta-value\">' + tweet.character_count + '/280</div></div>';\n      html += '<div class=\"meta-item\"><div class=\"meta-label\">CTA</div>';\n      html += '<div class=\"meta-value\">' + tweet.cta + '</div></div>';\n      html += '<div class=\"meta-item\"><div class=\"meta-label\">Agent-First Score</div>';\n      html += '<div class=\"meta-value\">' + tweet.agent_first_score + '/10</div></div>';\n      html += '<div class=\"meta-item\"><div class=\"meta-label\">Composability Score</div>';\n      html += '<div class=\"meta-value\">' + tweet.composability_score + '/10</div></div>';\n      html += '</div></div>';\n    });\n\n    html += '<div class=\"footer\">';\n    html += '<p>�� Generated by CoopHive Multi-Agent Brand Alignment System</p>';\n    html += '<p>Ready for deployment to X.com • Optimized for brand consistency</p>';\n    html += '</div></body></html>';\n\n    return [{\n      json: {\n        email_html: html\n      }\n    }];\n    \n  } catch (error) {\n    console.error('Error creating email HTML:', error);\n    return [{\n      json: {\n        error: true,\n        message: error.message\n      }\n    }];\n  }\n};\n\nreturn createBrandAlignedEmail();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2020,
+        640
+      ],
+      "id": "6f81f4ff-b398-4592-a492-dd9c2f0fd2da",
+      "name": "Create Email HTML"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3380,
+        400
+      ],
+      "id": "a2f1565c-aa48-4547-a0f7-da7e94294818",
+      "name": "Loop Over Items - replace for sentiment analysis",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# SENTIMENT ANALYSIS AGENT\n\n## SYSTEM\nYou are CoopHive's Sentiment Analysis Specialist. Your job is to analyze tweet sentiment while preserving ALL original data.\n\n## TASK\nAnalyze the sentiment of the provided tweet and return the COMPLETE original data structure PLUS sentiment analysis.\n\n## INPUT STRUCTURE\nYou receive individual tweet objects with fields: Content, Date, Likes, Retweets, Replies, Views, etc.\n\n## OUTPUT REQUIREMENTS\nReturn EXACTLY this JSON structure (preserve ALL original fields + add sentiment):\n\n```json\n{\n  \"Content\": \"{{ $json.Content }}\",\n  \"Date\": \"{{ $json.Date }}\",\n  \"Likes\": {{ $json.Likes }},\n  \"Retweets\": {{ $json.Retweets }},\n  \"Replies\": {{ $json.Replies }},\n  \"Quotes\": {{ $json.Quotes }},\n  \"Views\": {{ $json.Views }},\n  \"Status\": \"{{ $json.Status }}\",\n  \"Tweet\": \"{{ $json.Tweet }}\",\n  \"Tweet ID\": {{ $json['Tweet ID'] }}\n  \"URL\": \"{{ $json.URL }}\",\n  \"sentiment_analysis\": {\n    \"overall_sentiment\": \"<positive|negative|neutral>\",\n    \"confidence_score\": <0.0-1.0>,\n    \"emotional_tone\": \"<excited|frustrated|optimistic|concerned|informative|etc>\",\n    \"engagement_factors\": [\"<factor1>\", \"<factor2>\"],\n    \"coophive_relevance\": \"<high|medium|low>\",\n    \"key_themes\": [\"<theme1>\", \"<theme2>\"],\n    \"sentiment_reasoning\": \"<brief explanation>\"\n  }\n}\n```\n\n## SENTIMENT ANALYSIS CRITERIA\n- **Overall Sentiment**: Positive/Negative/Neutral based on language tone\n- **Confidence Score**: How certain you are (0.0 = uncertain, 1.0 = very certain)  \n- **Emotional Tone**: Specific emotion beyond just positive/negative\n- **Engagement Factors**: What makes this tweet engaging (controversy, insight, humor, etc.)\n- **CoopHive Relevance**: How relevant to decentralized computing, Web3, AI infrastructure\n- **Key Themes**: Main topics/concepts mentioned\n- **Sentiment Reasoning**: Brief explanation of sentiment decision\n\n## PAYLOAD ACCESS\nTWEET_CONTENT = {{ $json.Content }}\nLIKES_COUNT = {{ $json.Likes }}\nRETWEETS_COUNT = {{ $json.Retweets }}\nREPLIES_COUNT = {{ $json.Replies }}\nVIEWS_COUNT = {{ $json.Views }}\nTWEET_DATE = {{ $json.Date }}\n\nReturn ONLY the JSON - no markdown, no extra text.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        420
+      ],
+      "id": "42782c96-663c-4251-9e67-e381224067e3",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        260
+      ],
+      "id": "fceed47d-d785-419b-95fa-044e28465ad0",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "G2qzH1zqSv7JmOPg",
+          "name": "Google Gemini(PaLM) Api "
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent --> x.com expert",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serve UserIDs": {
+      "main": [
+        [
+          {
+            "node": "SplitInBatches --> UserID(batchSize=1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Tweets  ←── split batch item drives userId={{ $json.userId }}": {
+      "main": [
+        [
+          {
+            "node": "SplitInBatches --> UserID(batchSize=1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code (map API response → your Tweet ID / URL / Content JSON)": {
+      "main": [
+        [
+          {
+            "node": "FILTER LATEST 10 TWEETS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generated Tweets Processor": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Email HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Tweet Data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Notification": {
+      "main": [
+        []
+      ]
+    },
+    "AI Agent --> x.com expert": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - brand expert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Transform Tweet Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "POST to WebApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - brand expert": {
+      "main": [
+        [
+          {
+            "node": "Generated Tweets Processor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - brand expert",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger - runs daily": {
+      "main": [
+        [
+          {
+            "node": "Serve UserIDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SplitInBatches --> UserID(batchSize=1)": {
+      "main": [
+        [
+          {
+            "node": "Code (map API response → your Tweet ID / URL / Content JSON)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request Tweets  ←── split batch item drives userId={{ $json.userId }}",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FILTER LATEST 10 TWEETS": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Email HTML": {
+      "main": [
+        [
+          {
+            "node": "Gmail Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items - replace for sentiment analysis": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "AI Agent --> x.com expert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "520787a3-8755-4c01-9953-fd4f9faf0a16",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a6f30bd66fed7fcd249de9838e08b9e7b2adf65dc6cc773a40f041d31551bafa"
+  },
+  "id": "M7nME7h8w2Hyi4T6",
+  "tags": []
+}

@@ -27,14 +27,19 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     
-    # Authentication URLs (allauth & custom auth)
-    path('accounts/', include('allauth.urls')),  # allauth URLs (including Google OAuth)
-    path('user_account_manager/', include('user_account_manager.urls', namespace='user_account_manager')),  # Our custom auth URLs
+    # Custom authentication URLs (prioritized over allauth)
+    path('accounts/', include('user_account_manager.urls', namespace='accounts')),
+    
+    # Allauth URLs (for Google OAuth and other social auth)
+    path('accounts/', include('allauth.urls')),
     
     # Homepage and core functionality
     path('', include('core.urls')),
     
     # Platform-specific URLs
+    path('twitter/', include('twitter.urls')),
+    path('linkedin/', include('linkedin.urls')),
+    path('farcaster/', include('farcaster.urls')),
     path('bluesky/', include('bluesky.urls')),
 ]
 

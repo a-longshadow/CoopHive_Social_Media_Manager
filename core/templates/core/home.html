@@ -1,26 +1,111 @@
 {% extends 'base.html' %}
 
+{% block extra_css %}
+<style>
+    .platform-card {
+        background: rgba(255,255,255,0.8);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.2);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    .platform-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        background: rgba(255,255,255,0.95);
+        text-decoration: none;
+        color: inherit;
+    }
+    .platform-card h2 {
+        color: #4f46e5;
+        font-weight: 700;
+    }
+    .platform-card p {
+        color: #6b7280;
+    }
+    .platform-card:hover h2 {
+        color: #3730a3;
+    }
+    .platform-card:hover p {
+        color: #374151;
+    }
+    .platform-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+        color: white;
+    }
+    .twitter-icon { background: linear-gradient(45deg, #1da1f2, #0d8bd9); }
+    .linkedin-icon { background: linear-gradient(45deg, #0077b5, #005885); }
+    .farcaster-icon { background: linear-gradient(45deg, #8a63d2, #6b46c1); }
+    .bluesky-icon { background: linear-gradient(45deg, #00bcd4, #0097a7); }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-4xl font-bold mb-8">Welcome to CoopHive Social Media Manager</h1>
     <p class="text-lg mb-4">Manage your social media presence across multiple platforms:</p>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">Twitter</h2>
-            <p>Manage your Twitter presence</p>
-        </div>
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">LinkedIn</h2>
-            <p>Manage your LinkedIn presence</p>
-        </div>
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">Farcaster</h2>
-            <p>Manage your Farcaster presence</p>
-        </div>
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">Bluesky</h2>
-            <p>Manage your Bluesky presence</p>
-        </div>
+        {% if user.is_authenticated %}
+            <a href="/twitter/" class="platform-card p-6 rounded-lg shadow-md">
+                <div class="twitter-icon">𝕏</div>
+                <h2 class="text-xl font-semibold mb-4">Twitter</h2>
+                <p>Manage your Twitter presence</p>
+            </a>
+            <a href="/linkedin/" class="platform-card p-6 rounded-lg shadow-md">
+                <div class="linkedin-icon">in</div>
+                <h2 class="text-xl font-semibold mb-4">LinkedIn</h2>
+                <p>Manage your LinkedIn presence</p>
+            </a>
+            <a href="/farcaster/" class="platform-card p-6 rounded-lg shadow-md">
+                <div class="farcaster-icon">⚡</div>
+                <h2 class="text-xl font-semibold mb-4">Farcaster</h2>
+                <p>Manage your Farcaster presence</p>
+            </a>
+            <a href="/bluesky/" class="platform-card p-6 rounded-lg shadow-md">
+                <div class="bluesky-icon">🦋</div>
+                <h2 class="text-xl font-semibold mb-4">Bluesky</h2>
+                <p>Manage your Bluesky presence</p>
+            </a>
+        {% else %}
+            <div class="platform-card p-6 rounded-lg shadow-md">
+                <div class="twitter-icon">𝕏</div>
+                <h2 class="text-xl font-semibold mb-4">Twitter</h2>
+                <p>Manage your Twitter presence</p>
+            </div>
+            <div class="platform-card p-6 rounded-lg shadow-md">
+                <div class="linkedin-icon">in</div>
+                <h2 class="text-xl font-semibold mb-4">LinkedIn</h2>
+                <p>Manage your LinkedIn presence</p>
+            </div>
+            <div class="platform-card p-6 rounded-lg shadow-md">
+                <div class="farcaster-icon">⚡</div>
+                <h2 class="text-xl font-semibold mb-4">Farcaster</h2>
+                <p>Manage your Farcaster presence</p>
+            </div>
+            <div class="platform-card p-6 rounded-lg shadow-md">
+                <div class="bluesky-icon">🦋</div>
+                <h2 class="text-xl font-semibold mb-4">Bluesky</h2>
+                <p>Manage your Bluesky presence</p>
+            </div>
+        {% endif %}
     </div>
+    {% if not user.is_authenticated %}
+        <div class="text-center mt-8">
+            <p class="text-gray-600 mb-4">Sign in to access your social media management tools</p>
+            <a href="{% url 'accounts:login' %}" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                Get Started
+            </a>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

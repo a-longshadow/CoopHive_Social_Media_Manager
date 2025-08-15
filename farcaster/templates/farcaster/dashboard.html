@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .platform-header {
+        background: linear-gradient(135deg, {{ platform_color }}, #6b46c1);
+        color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+    }
+    .stat-card {
+        background: rgba(255,255,255,0.8);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: {{ platform_color }};
+    }
+    .coming-soon {
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 1rem;
+        padding: 3rem;
+        text-align: center;
+        margin-top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Platform Header -->
+    <div class="platform-header">
+        <div class="flex items-center">
+            <div style="font-size: 3rem; margin-right: 1rem;">{{ platform_icon }}</div>
+            <div>
+                <h1 class="text-3xl font-bold">{{ platform }} Dashboard</h1>
+                <p class="opacity-90">Manage your decentralized {{ platform }} presence</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="stat-card">
+            <div class="stat-number">0</div>
+            <div class="text-gray-600">Casts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">0</div>
+            <div class="text-gray-600">Scheduled</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">0</div>
+            <div class="text-gray-600">Followers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">0</div>
+            <div class="text-gray-600">Reactions</div>
+        </div>
+    </div>
+
+    <!-- Coming Soon Notice -->
+    <div class="coming-soon">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">🚧</div>
+        <h2 class="text-2xl font-bold mb-4">{{ platform }} Integration Coming Soon</h2>
+        <p class="text-gray-600 mb-4">
+            We're working hard to bring you the best {{ platform }} management experience. 
+            Features will include:
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-2xl mx-auto">
+            <div class="flex items-center">
+                <span class="text-green-500 mr-2">✓</span>
+                Cast scheduling and management
+            </div>
+            <div class="flex items-center">
+                <span class="text-green-500 mr-2">✓</span>
+                Decentralized analytics
+            </div>
+            <div class="flex items-center">
+                <span class="text-green-500 mr-2">✓</span>
+                Channel management
+            </div>
+            <div class="flex items-center">
+                <span class="text-green-500 mr-2">✓</span>
+                Community engagement
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

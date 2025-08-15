@@ -27,22 +27,35 @@ CoopHive_Social_Media_Manager/
 ├── user_account_manager/          # User authentication and management
 │   ├── __init__.py
 │   ├── admin.py                 # User admin customization
-│   ├── apps.py                  # App configuration
-│   ├── forms.py                 # Authentication forms
-│   ├── models.py               # User model customization
-│   ├── urls.py                 # Authentication URLs
-│   ├── views.py                # Authentication views
-│   ├── adapters.py             # Social auth adapters
-│   ├── utils.py                # Authentication utilities
+│   ├── apps.py                  # App configuration with auto super admin creation
+│   ├── forms.py                 # Authentication forms (TaskForge-style)
+│   ├── models.py               # User model and verification codes
+│   ├── urls.py                 # Authentication URLs (accounts namespace)
+│   ├── views.py                # Authentication views with Google OAuth
+│   ├── adapters.py             # Social auth adapters with domain restrictions
+│   ├── backends.py             # Custom auth backends (email/username login)
+│   ├── utils.py                # Authentication utilities (DB-first settings)
+│   ├── email_backend.py        # Custom database-first email backend
 │   ├── migrations/             # Database migrations
+│   ├── templatetags/           # Custom template tags
+│   │   ├── __init__.py
+│   │   └── form_tags.py        # Form styling template filters
 │   ├── templates/
-│   │   └── user_account_manager/
-│   │       ├── login.html
-│   │       ├── register.html
-│   │       └── profile.html
+│   │   └── accounts/           # Modern TaskForge-styled templates
+│   │       ├── login.html      # Modern login with Google OAuth
+│   │       ├── register.html   # Modern registration with Google OAuth
+│   │       ├── verify.html     # Email verification
+│   │       ├── google_verify.html # Google OAuth verification
+│   │       ├── reset_request.html # Password reset request
+│   │       └── reset_verify.html  # Password reset verification
+│   ├── tests/                  # Comprehensive test suite
+│   │   ├── __init__.py
+│   │   └── test_authentication.py # 24 authentication tests
 │   └── management/
 │       └── commands/
-│           └── setup_google_oauth.py
+│           ├── setup_google_oauth.py # Google OAuth setup helper
+│           ├── create_super_admins.py # Auto-create hardcoded super admins
+│           └── init_email.py    # Email configuration management
 │
 ├── core/                         # Core functionality
 │   ├── __init__.py
@@ -77,12 +90,13 @@ CoopHive_Social_Media_Manager/
 │       └── [similar structure to linkedin]
 │
 ├── templates/                    # Global templates
-│   ├── _base.html              # Base template
-│   ├── _nav.html               # Navigation component
-│   ├── _footer.html            # Footer component
-│   └── components/             # Reusable components
+│   ├── base.html               # Modern base template with TaskForge styling
+│   ├── _nav.html               # Navigation component (integrated into base.html)
+│   ├── 404.html                # Error page
+│   └── home.html               # Homepage template
 │
 ├── static/                      # Static files
+│   ├── coophive_logo.svg       # Custom CoopHive logo
 │   ├── css/
 │   │   └── styles.css
 │   ├── js/
@@ -90,9 +104,15 @@ CoopHive_Social_Media_Manager/
 │   └── img/
 │
 ├── docs/                        # Project documentation
-│   ├── deployment.md
-│   ├── development.md
-│   └── testing.md
+│   ├── api.md                  # API documentation
+│   ├── configuration.md        # Configuration guide
+│   ├── deployment.md          # Deployment guide
+│   ├── development.md         # Development guide
+│   ├── forms.md               # Forms documentation
+│   ├── models.md              # Database models
+│   ├── testing.md             # Testing guide
+│   ├── ui_modernization.md    # UI modernization details
+│   └── super_admin_setup.md   # Super admin & email setup
 │
 ├── .github/                     # GitHub configuration
 │   └── workflows/
@@ -156,18 +176,20 @@ COOPHIVE_DOMAIN_RESTRICTION = {
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # Authentication URLs
-    path('accounts/', include('allauth.urls')),
-    path('user_account_manager/', include('user_account_manager.urls')),
+    # Custom authentication URLs (prioritized over allauth)
+    path('accounts/', include('user_account_manager.urls', namespace='accounts')),
     
-    # Platform URLs
-    path('linkedin/', include('linkedin.urls')),
+    # Allauth URLs (for Google OAuth and other social auth)
+    path('accounts/', include('allauth.urls')),
+    
+    # Homepage and core functionality
+    path('', include('core.urls')),
+    
+    # Platform-specific URLs
     path('twitter/', include('twitter.urls')),
+    path('linkedin/', include('linkedin.urls')),
     path('farcaster/', include('farcaster.urls')),
     path('bluesky/', include('bluesky.urls')),
-    
-    # Core URLs
-    path('', include('core.urls')),
 ]
 ```
 
@@ -244,21 +266,42 @@ SettingsManager.set('GOOGLE_OAUTH_CLIENT_ID', 'new_value', 'OAuth client ID for 
 
 Authentication is handled by the `user_account_manager` app, which integrates both custom authentication and social authentication via `django-allauth`.
 
+### Super Admin Users - ✅ FULLY WORKING!
+The system automatically creates hardcoded super admin users:
+- **`joe@coophive.network`** - Primary super admin  
+- **`levi@coophive.network`** - Secondary super admin
+
+**Access Methods (Both Working):**
+1. **Google OAuth**: `/accounts/login/` → "Continue with Google" ✅
+2. **Password Reset**: `/accounts/password/reset/` → Email verification ✅
+
+**Recent Fixes:**
+- ✅ **Email timeout fixed**: SSL port 465 configuration working
+- ✅ **Database settings**: SettingsManager properly reads from database
+- ✅ **SMTP working**: Gmail app password authentication successful
+- ✅ **Password reset flow**: Emails sent to Gmail inbox (not console)
+
+For complete setup instructions, see [`docs/super_admin_setup.md`](super_admin_setup.md).
+
 ### URLs Structure
 
-Core authentication URLs (namespace: 'user_account_manager'):
-- `/user_account_manager/login/` - Login page (`user_account_manager:login`)
-- `/user_account_manager/register/` - Registration page (`user_account_manager:register`)
-- `/user_account_manager/profile/` - User profile (`user_account_manager:profile`)
-- `/user_account_manager/verify/` - Email verification (`user_account_manager:verify`)
-- `/user_account_manager/verify-otp/` - OTP verification (`user_account_manager:verify_otp`)
-- `/user_account_manager/reset/` - Password reset (`user_account_manager:reset`)
+Core authentication URLs (namespace: 'accounts'):
+- `/accounts/login/` - Modern login page with Google OAuth (`accounts:login`)
+- `/accounts/register/` - Modern registration page with Google OAuth (`accounts:register`)
+- `/accounts/verify/` - Email verification (`accounts:verify`)
+- `/accounts/google/verify/` - Google OAuth verification (`accounts:google-verify`)
+- `/accounts/reset/` - Password reset request (`accounts:reset`)
+- `/accounts/password/verify/` - Password reset verification (`accounts:reset-verify`)
+- `/accounts/logout/` - User logout (`accounts:logout`)
+- `/accounts/domain-breach/` - Domain restriction breach handler (`accounts:domain-breach`)
 
 Social Authentication URLs (handled by django-allauth):
 - `/accounts/google/login/` - Google OAuth login
 - `/accounts/google/login/callback/` - Google OAuth callback
 
-### Google OAuth Setup
+### Google OAuth Setup (WORKING!)
+
+✅ **Google OAuth is fully functional** with proper TaskForge-style implementation.
 
 To set up Google OAuth:
 
@@ -275,6 +318,13 @@ python manage.py setup_google_oauth
      - http://localhost:8000/accounts/google/login/callback/
      - http://127.0.0.1:8000/accounts/google/login/callback/
      - Your production domain callback URL
+
+**OAuth Features:**
+- ✅ Working "Continue with Google" buttons
+- ✅ Proper 302 redirect flow (no more 200 error pages)
+- ✅ Domain restriction handling with beautiful error pages
+- ✅ Super admin access via Google OAuth
+- ✅ Database-first credential storage with environment fallback
 
 ## Development Setup
 
@@ -303,14 +353,27 @@ python manage.py makemigrations user_account_manager
 # Run all migrations
 python manage.py migrate
 
-# Initialize settings database
+# Initialize settings database (includes email credentials)
 python manage.py init_settings
 
-# Create superuser
-python manage.py createsuperuser
+# Super admins are created automatically (joe@coophive.network, levi@coophive.network)
+# No manual superuser creation needed!
 ```
 
-5. Set up development tools:
+5. Configure email for super admin access:
+```bash
+# Check current email configuration
+python manage.py init_email --check
+
+# Set email credentials in database (optional - can use .env file)
+python manage.py init_email --set-user "your-email@gmail.com"
+python manage.py init_email --set-password "your-gmail-app-password"
+
+# Test email sending
+python manage.py init_email --test "your-email@gmail.com"
+```
+
+6. Set up development tools:
 ```bash
 # Install pre-commit hooks
 pre-commit install

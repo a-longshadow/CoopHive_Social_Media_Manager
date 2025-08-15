@@ -4,12 +4,15 @@ A scalable Django-based social media management system for LinkedIn, Twitter (X.
 
 ## 🚀 Features
 
-- Multi-platform social media management
-- Campaign-based content organization
-- Scheduled posting
-- Media asset management
-- Analytics and engagement tracking
-- REST API for integrations
+- **Multi-platform social media management** - LinkedIn, Twitter, Farcaster, Bluesky
+- **Modern authentication system** - ✅ **Google OAuth fully working** with TaskForge-style UI
+- **Super admin access** - Hardcoded super admins (joe@coophive.network, levi@coophive.network)
+- **Database-first configuration** - Settings stored in database with environment fallback
+- **Campaign-based content organization** - Organize posts by campaigns
+- **Scheduled posting** - Plan and schedule content across platforms
+- **Media asset management** - Upload and manage images, videos, documents
+- **Analytics and engagement tracking** - Monitor post performance
+- **REST API for integrations** - Programmatic access to all features
 
 ## 📋 Supported Platforms
 
@@ -19,6 +22,11 @@ A scalable Django-based social media management system for LinkedIn, Twitter (X.
 - Bluesky
 
 ## 🛠️ Quick Start
+
+### ✅ Super Admin Access (NO SETUP NEEDED!)
+**Super admins are automatically created:**
+- **joe@coophive.network** - Login via Google OAuth at `/accounts/login/`
+- **levi@coophive.network** - Login via Google OAuth at `/accounts/login/`
 
 ### Local Development
 ```bash
@@ -32,18 +40,17 @@ pip install -r requirements.txt
 # Set up environment variables (edit with your API keys)
 cp .env.example .env  
 
-# Set up Google OAuth (follow prompts)
-python manage.py setup_google_oauth
-
-# Run migrations
+# Run migrations (super admins created automatically!)
 python manage.py migrate
 
-# Create superuser
-python manage.py createsuperuser
+# Initialize settings
+python manage.py init_settings
 
 # Run development server
 python manage.py runserver
 ```
+
+**🎉 That's it! Visit http://127.0.0.1:8000/accounts/login/ and use Google OAuth to sign in as super admin!**
 
 ### Production (Railway)
 1. Fork/Clone repository

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto">
+        <!-- CoopHive Logo -->
+        <div class="text-center mb-8">
+            <img src="{% static 'coophive_logo.svg' %}" alt="CoopHive" class="mx-auto h-12 w-auto">
+        </div>
+
+        <!-- Error Card -->
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8 text-center">
+            <!-- Warning Icon -->
+            <div class="w-16 h-16 mx-auto mb-6 bg-yellow-100 rounded-full flex items-center justify-center">
+                <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+
+            <!-- Title -->
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Access Restricted</h2>
+
+            <!-- Main Message -->
+            <p class="text-gray-600 mb-6">
+                Your account has been temporarily disabled. CoopHive Social Media Manager access is restricted to
+                <strong>@coophive.network</strong> email addresses only. Please contact your administrator for access
+                using a CoopHive Network email address.
+            </p>
+
+            <!-- Breach Details -->
+            {% if breach_email %}
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <p class="text-sm text-gray-700">
+                    <strong>Attempted Email:</strong> {{ breach_email }}
+                </p>
+                {% if provider %}
+                <p class="text-sm text-gray-700">
+                    <strong>Authentication Method:</strong> {{ provider|title }}
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="space-y-4">
+                <div class="text-center">
+                    <p class="text-sm text-gray-600 mb-4">
+                        Do you have a CoopHive Network account?
+                    </p>
+
+                    <div class="flex flex-col gap-3">
+                        <a href="{% url 'accounts:login' %}"
+                           class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 inline-block font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                            </svg>
+                            Sign In with CoopHive Account
+                        </a>
+
+                        <a href="{% url 'accounts:register' %}"
+                           class="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-3 px-6 rounded-lg hover:from-green-700 hover:to-teal-700 transition-all duration-300 inline-block font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                            </svg>
+                            Register CoopHive Account
+                        </a>
+
+                        <a href="{% url 'core:home' %}"
+                           class="w-full bg-gray-600 text-white py-3 px-6 rounded-lg hover:bg-gray-700 transition-colors inline-block font-medium">
+                            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                            </svg>
+                            Return to Home
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Auto-redirect notice -->
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <p class="text-sm text-gray-500 text-center">
+                        Redirecting to home page in <span id="countdown">{{ redirect_delay|default:10 }}</span> seconds...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="mt-6 text-center">
+            <p class="text-xs text-gray-500">
+                This security measure protects CoopHive Network resources. 
+                Your attempt has been logged for security purposes.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Auto-redirect Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var countdown = parseInt(document.getElementById('countdown').textContent);
+    var countdownEl = document.getElementById('countdown');
+    var homeUrl = "{% url 'core:home' %}";
+
+    var timer = setInterval(function() {
+        countdown--;
+        countdownEl.textContent = countdown;
+
+        if (countdown <= 0) {
+            clearInterval(timer);
+            window.location.href = homeUrl;
+        }
+    }, 1000);
+});
+</script>
+{% endblock %}

@@ -4,44 +4,135 @@
 
 ### User Account Manager Forms
 
-#### Registration Form
+#### Registration Form (TaskForge-style)
 ```python
-class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-    
-    class Meta:
-        model = User
-        fields = ('email', 'username', 'password1', 'password2')
+class RegisterForm(forms.Form):
+    """Registration form with TaskForge field structure and domain validation."""
+    email = forms.EmailField()
+    name = forms.CharField(required=False, max_length=150, label="Full name")
+    username = forms.CharField(required=False, max_length=150)
+    password1 = forms.CharField(widget=forms.PasswordInput())
+    password2 = forms.CharField(widget=forms.PasswordInput())
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["email"].widget.attrs["placeholder"] = "yourname@coophive.network"
+        self.fields["password1"].label = "Password"
+        self.fields["password2"].label = "Confirm password"
+        self.fields["password1"].widget.attrs["placeholder"] = "Create a strong password"
+        self.fields["password2"].widget.attrs["placeholder"] = "Re-enter password"
+        self.fields["password1"].widget.attrs["autocomplete"] = "new-password"
+        self.fields["password2"].widget.attrs["autocomplete"] = "new-password"
         
+        # Set default CSS classes for all fields
+        for field in self.fields.values():
+            field.widget.attrs.setdefault(
+                "class", "w-full border border-gray-300 rounded p-2"
+            )
+
+        self.fields["name"].widget.attrs["placeholder"] = "Your full name (optional)"
+        self.fields["username"].widget.attrs["placeholder"] = "username (optional)"
+
     def clean_email(self):
-        email = self.cleaned_data['email']
-        domain = email.split('@')[1]
-        if settings.COOPHIVE_DOMAIN_RESTRICTION['ENABLED']:
-            if domain != settings.COOPHIVE_DOMAIN_RESTRICTION['ALLOWED_DOMAIN']:
-                raise ValidationError("Invalid email domain")
+        email = self.cleaned_data["email"].lower()
+        _validate_domain(email)
+        if User.objects.filter(email=email).exists():
+            raise ValidationError("User with this e-mail already exists")
         return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+        
+        if password1 and password2 and password1 != password2:
+            raise ValidationError("Passwords do not match")
+        
+        return cleaned_data
 ```
 
-#### Login Form
+#### Login Form (Email/Username Support)
 ```python
-class CustomAuthenticationForm(AuthenticationForm):
-    username = forms.EmailField(widget=forms.EmailInput(attrs={'autofocus': True}))
-    
-    def confirm_login_allowed(self, user):
-        if not user.email_verified:
-            raise ValidationError("Please verify your email before logging in.")
+class LoginForm(AuthenticationForm):
+    """Custom login form supporting both username and email login."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Customize the username field to indicate it accepts email too
+        self.fields["username"].label = "Username or Email"
+        self.fields["username"].widget.attrs.update(
+            {
+                "placeholder": "Enter your username or email",
+                "class": "w-full border border-gray-300 rounded p-2",
+            }
+        )
+        
+        # Update password field
+        self.fields["password"].widget.attrs.update(
+            {"class": "w-full border border-gray-300 rounded p-2"}
+        )
 ```
 
-#### Email Verification Form
+#### Verification Forms
 ```python
-class EmailVerificationForm(forms.Form):
-    code = forms.CharField(max_length=6, min_length=6)
-    
+class CodeForm(forms.Form):
+    """Form for entering 4-digit verification codes."""
+    code = forms.CharField(max_length=4, min_length=4)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["code"].widget.attrs["placeholder"] = "1234"
+        self.fields["code"].widget.attrs["class"] = "w-full text-center text-3xl font-mono tracking-widest border border-gray-300 rounded p-2"
+
     def clean_code(self):
-        code = self.cleaned_data['code']
+        code = self.cleaned_data["code"]
         if not code.isdigit():
-            raise ValidationError("Verification code must be numeric")
+            raise ValidationError("Code must contain only digits")
         return code
+
+class GoogleVerificationForm(forms.Form):
+    """Form for Google OAuth verification codes."""
+    code = forms.CharField(max_length=4, min_length=4)
+
+    def clean_code(self):
+        code = self.cleaned_data["code"]
+        if not code.isdigit():
+            raise ValidationError("Code must contain only digits")
+        return code
+
+class PasswordResetRequestForm(forms.Form):
+    """Form for requesting a password reset."""
+    email = forms.EmailField(
+        widget=forms.EmailInput(
+            attrs={"class": "w-full border border-gray-300 rounded p-2"}
+        )
+    )
+
+class PasswordResetForm(forms.Form):
+    """Form for setting a new password after reset."""
+    code = forms.CharField(
+        label="Reset Code",
+        max_length=4,
+        min_length=4,
+        widget=forms.TextInput(
+            attrs={
+                "class": "w-full text-center font-mono text-2xl border border-gray-300 rounded p-2",
+                "placeholder": "0000"
+            }
+        ),
+    )
+    password1 = forms.CharField(
+        label="New Password",
+        widget=forms.PasswordInput(
+            attrs={"class": "w-full border border-gray-300 rounded p-2"}
+        ),
+    )
+    password2 = forms.CharField(
+        label="Confirm New Password",
+        widget=forms.PasswordInput(
+            attrs={"class": "w-full border border-gray-300 rounded p-2"}
+        ),
+    )
 ```
 
 ## Social Media Post Forms
@@ -165,26 +256,44 @@ class TimestampFormMixin:
         return cleaned_data
 ```
 
-## Form Templates
+## Template Tags
 
-### Base Form Template
-```html
-{% extends "_base.html" %}
-{% block content %}
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    {% for field in form %}
-    <div class="form-group">
-        {{ field.label_tag }}
-        {{ field }}
-        {{ field.errors }}
-        {% if field.help_text %}
-        <small class="form-text text-muted">{{ field.help_text }}</small>
-        {% endif %}
-    </div>
-    {% endfor %}
-    <button type="submit" class="btn btn-primary">Submit</button>
-</form>
-{% endblock %}
+### Custom Form Tags (`user_account_manager/templatetags/form_tags.py`)
+```python
+from django import template
+
+register = template.Library()
+
+@register.filter(name="add_class")
+def add_class(field, css):
+    """Add CSS classes to form fields while preserving existing attributes."""
+    return field.as_widget(attrs={**field.field.widget.attrs, "class": css})
+
+@register.filter(name="add_attrs")
+def add_attrs(field, attrs_string):
+    """Add multiple attributes to form fields."""
+    attrs = {}
+    for attr in attrs_string.split(','):
+        key, value = attr.split('=', 1)
+        attrs[key.strip()] = value.strip()
+    
+    return field.as_widget(attrs={**field.field.widget.attrs, **attrs})
 ```
+
+## Modern Form Templates
+
+### TaskForge-Style Authentication Templates
+
+#### Key Features:
+- **Modern TaskForge styling** with clean white cards and subtle shadows
+- **Google OAuth integration** with proper SVG icons
+- **Password visibility toggles** with JavaScript
+- **Responsive design** that works on all devices
+- **Toastify notifications** for user feedback
+- **Gradient buttons** and modern typography
+
+#### Template Structure:
+- Uses `{% load form_tags %}` for clean form styling
+- Extends modern `base.html` with TaskForge background (#F5F7FB)
+- Implements `add_class` filter for CSS application
+- Includes JavaScript for password toggle functionality

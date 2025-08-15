@@ -1,0 +1,100 @@
+[
+    {
+      "campaign_batch": "batch_2025-08-14_16-10",
+      "generated_at": "2025-08-14T16:10:46.172Z",
+      "analysis_summary": {
+        "input_batch_size": 3,
+        "dominant_themes": [
+          "brand_alignment",
+          "cyber_architect",
+          "agent_first"
+        ],
+        "top_engagement_score": 1,
+        "content_strategy": "Multi-agent brand alignment with Cyber Architect voice",
+        "brand_alignment_score": 9
+      },
+      "tweets": [
+        {
+          "id": "batch_2025-08-14_16-10-tweet-1",
+          "type": "scientific_compute",
+          "content": "Architecting research workflows: CoopHive designs the rails for immediate compute access. Blueprint your discoveries, execute without delay. Agents orchestrate resources on demand. #DecentralizedCompute",
+          "character_count": 218,
+          "engagement_hook": "Compute Without Queues",
+          "coophive_elements": [
+            "agent-first",
+            "compute-orchestration",
+            "queue-elimination"
+          ],
+          "discord_voice_patterns": [
+            "blueprint-precision",
+            "architectural-clarity",
+            "agent-centric",
+            "autonomous-orchestration"
+          ],
+          "theme_connection": "Refined tweets to fully embody the Cyber Architect persona, foregrounding agent-first architecture, game-theoretic primitives, and marketplace composability. Ensured precise technical language and strong audience-CTA alignment, boosting engagement potential.",
+          "timestamp": "2025-08-14T16:10:46.172Z",
+          "ready_for_deployment": true,
+          "campaign_batch": "batch_2025-08-14_16-10",
+          "status": "Brand Aligned",
+          "is_edited": false
+        },
+        {
+          "id": "batch_2025-08-14_16-10-tweet-2",
+          "type": "infrastructure_optimization",
+          "content": "Your data center's unused capacity is an untapped blueprint for revenue. CoopHive’s agent-first architecture activates idle racks, orchestrating demand via game-theoretic primitives. #InfraMonetization",
+          "character_count": 219,
+          "engagement_hook": "Idle Racks, Instant Revenue",
+          "coophive_elements": [
+            "marketplace-composability",
+            "revenue-optimization",
+            "idle-capacity"
+          ],
+          "discord_voice_patterns": [
+            "blueprint-precision",
+            "architectural-clarity",
+            "agent-centric",
+            "autonomous-orchestration",
+            "modular-design",
+            "composable-primitives"
+          ],
+          "theme_connection": "Refined tweets to fully embody the Cyber Architect persona, foregrounding agent-first architecture, game-theoretic primitives, and marketplace composability. Ensured precise technical language and strong audience-CTA alignment, boosting engagement potential.",
+          "timestamp": "2025-08-14T16:10:46.172Z",
+          "ready_for_deployment": true,
+          "campaign_batch": "batch_2025-08-14_16-10",
+          "status": "Brand Aligned",
+          "is_edited": false
+        },
+        {
+          "id": "batch_2025-08-14_16-10-tweet-3",
+          "type": "developer_tools",
+          "content": "For technical builders: Design your markets, not your infrastructure. CoopHive’s composable, agent-first framework provides the rails to ship complex dApps fast. Skip infra, secure execution. #Web3Dev",
+          "character_count": 225,
+          "engagement_hook": "Ship Markets, Skip Infra",
+          "coophive_elements": [
+            "game-theoretic-primitives",
+            "marketplace-design",
+            "infra-abstraction"
+          ],
+          "discord_voice_patterns": [
+            "blueprint-precision",
+            "architectural-clarity",
+            "agent-centric",
+            "autonomous-orchestration",
+            "modular-design",
+            "composable-primitives"
+          ],
+          "theme_connection": "Refined tweets to fully embody the Cyber Architect persona, foregrounding agent-first architecture, game-theoretic primitives, and marketplace composability. Ensured precise technical language and strong audience-CTA alignment, boosting engagement potential.",
+          "timestamp": "2025-08-14T16:10:46.172Z",
+          "ready_for_deployment": true,
+          "campaign_batch": "batch_2025-08-14_16-10",
+          "status": "Brand Aligned",
+          "is_edited": false
+        }
+      ],
+      "tweet_count": 3,
+      "ready_for_deployment": 3,
+      "title": "Multi-Agent Brand-Aligned Content",
+      "description": "AI-generated tweets optimized for CoopHive brand voice and audience targeting",
+      "source_type": "multi_agent_automation"
+    }
+  ]
