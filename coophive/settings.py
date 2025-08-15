@@ -325,14 +325,22 @@ SOCIALACCOUNT_PROVIDERS = {
 # Use custom backend that loads settings dynamically at runtime
 EMAIL_BACKEND = 'user_account_manager.email_backend.DatabaseFirstEmailBackend'
 
-# Database-first settings with environment fallback - NO hardcoded defaults
-EMAIL_HOST = get_database_setting('EMAIL_HOST')
-EMAIL_PORT = int(get_database_setting('EMAIL_PORT'))
-EMAIL_USE_SSL = get_database_setting('EMAIL_USE_SSL').lower() == 'true'
-EMAIL_USE_TLS = get_database_setting('EMAIL_USE_TLS').lower() == 'true'
-EMAIL_HOST_USER = get_database_setting('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = get_database_setting('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = get_database_setting('DEFAULT_FROM_EMAIL')
+# Email settings - Database-first with environment fallback
+# Use safe defaults during startup, will be overridden by auto-initialization
+def get_email_setting(key, default_value):
+    """Safely get email setting with fallback to default during startup."""
+    try:
+        return get_database_setting(key)
+    except ValueError:
+        return default_value
+
+EMAIL_HOST = get_email_setting('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(get_email_setting('EMAIL_PORT', '465'))
+EMAIL_USE_SSL = get_email_setting('EMAIL_USE_SSL', 'True').lower() == 'true'
+EMAIL_USE_TLS = get_email_setting('EMAIL_USE_TLS', 'False').lower() == 'true'
+EMAIL_HOST_USER = get_email_setting('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = get_email_setting('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = get_email_setting('DEFAULT_FROM_EMAIL', 'noreply@coophive.network')
 
 # Domain restriction settings - Database-first with environment fallback
 # Use safe defaults during startup, will be overridden by auto-initialization
