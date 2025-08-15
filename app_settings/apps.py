@@ -24,20 +24,14 @@ class AppSettingsConfig(AppConfig):
         # Import here to avoid circular imports
         try:
             from django.core.management import call_command
+            from django.db.models.signals import post_migrate
             import logging
             
             logger = logging.getLogger(__name__)
             
-            # Use a delayed approach to avoid database access warnings
-            def init_settings_delayed():
+            # Use post_migrate signal to avoid database access warnings
+            def init_settings_signal(sender, **kwargs):
                 try:
-                    # Check if database is ready by trying a simple query
-                    from app_settings.models import AppSetting
-                    
-                    # Try to access the database
-                    AppSetting.objects.exists()
-                    
-                    # Database is ready, initialize settings
                     call_command('init_settings', verbosity=0)
                     logger.info("Application settings initialized successfully")
                     
@@ -50,19 +44,31 @@ class AppSettingsConfig(AppConfig):
                     
                 except Exception as e:
                     logger.debug(f"Settings initialization skipped: {e}")
-                    # Don't raise the exception to avoid breaking app startup
+            
+            # Connect to post_migrate signal
+            post_migrate.connect(init_settings_signal, sender=self)
+            
+            # Also try immediate initialization for production (with delay)
+            def init_settings_delayed():
+                try:
+                    call_command('init_settings', verbosity=0)
+                    logger.info("Application settings initialized successfully")
+                    
+                    # Also setup Google OAuth if needed
+                    try:
+                        call_command('setup_google_oauth', verbosity=0)
+                        logger.info("Google OAuth setup completed")
+                    except Exception as e:
+                        logger.debug(f"Google OAuth setup skipped: {e}")
+                    
+                except Exception as e:
+                    logger.debug(f"Settings initialization skipped: {e}")
             
             # Schedule the initialization for after app is fully ready
             import threading
-            timer = threading.Timer(2.0, init_settings_delayed)  # Slightly longer delay for settings
+            timer = threading.Timer(5.0, init_settings_delayed)  # Longer delay to avoid warnings
             timer.daemon = True
             timer.start()
-            
-            # Also try immediate initialization for production
-            try:
-                init_settings_delayed()
-            except Exception as e:
-                logger.debug(f"Immediate initialization failed, will retry: {e}")
                 
         except ImportError:
             # Management command not available yet
