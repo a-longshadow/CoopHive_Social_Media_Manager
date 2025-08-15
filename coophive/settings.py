@@ -23,21 +23,48 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# Database-first settings with environment fallback
-def get_database_setting(key, default=None):
-    """Get setting from database first, fallback to environment variable"""
+# Database-first settings with environment fallback - NO HARDCODED DEFAULTS
+def get_database_setting(key, env_fallback=True):
+    """
+    Get setting from database first, fallback to environment variable.
+    NO hardcoded defaults for security - forces proper configuration.
+    """
     try:
         from app_settings.models import AppSetting
         setting = AppSetting.objects.get(key=key)
-        return setting.value if setting.value else default
+        if setting.value:  # Only return if value exists
+            return setting.value
     except:
-        return os.getenv(key, default)
+        pass  # Database unavailable or setting doesn't exist
+    
+    if env_fallback:
+        env_value = os.getenv(key)
+        if env_value:  # Only return if environment variable is set
+            return env_value
+    
+    # SECURITY: No hardcoded fallbacks - force proper configuration
+    raise ValueError(
+        f"CRITICAL CONFIGURATION ERROR: '{key}' must be set in database or environment variables.\n"
+        f"This is required for security. Please configure this setting before starting the application.\n"
+        f"Database: Set via /admin/app_settings/appsetting/ or management command\n"
+        f"Environment: Set {key}=your-value in your environment or .env file"
+    )
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_database_setting('SECRET_KEY', os.getenv('SECRET_KEY', 'django-insecure-ye_#=odz5!*ayleldxo3gpwik1m5*v*2*seqbc%zdx1tjjgle3'))
+# NO hardcoded fallbacks - forces proper configuration
+try:
+    SECRET_KEY = get_database_setting('SECRET_KEY')
+except ValueError as e:
+    print(f"🚨 SECRET_KEY Configuration Error: {e}")
+    raise
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = get_database_setting('DEBUG', os.getenv('DEBUG', 'True')).lower() == 'true'
+# NO hardcoded fallbacks - forces proper configuration
+try:
+    DEBUG = get_database_setting('DEBUG').lower() == 'true'
+except ValueError as e:
+    print(f"🚨 DEBUG Configuration Error: {e}")
+    raise
 
 # Railway deployment detection
 RAILWAY_ENVIRONMENT = os.getenv('RAILWAY_ENVIRONMENT_NAME') is not None
@@ -156,24 +183,31 @@ WSGI_APPLICATION = 'coophive.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Database configuration
+# Database configuration - NO hardcoded defaults
 try:
     import dj_database_url
+    # Try to get DATABASE_URL from environment or database settings
+    database_url = os.getenv('DATABASE_URL')
+    if not database_url:
+        # For development, allow SQLite if no DATABASE_URL is provided
+        # But still no hardcoded path - use environment variable
+        sqlite_path = os.getenv('SQLITE_PATH', str(BASE_DIR / 'db.sqlite3'))
+        database_url = f'sqlite:///{sqlite_path}'
+    
     DATABASES = {
         'default': dj_database_url.config(
-            default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
+            default=database_url,
             conn_max_age=600,
             conn_health_checks=True,
         )
     }
 except ImportError:
-    # Fallback to SQLite for development if dj_database_url is not available
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+    # If dj_database_url is not available, fail with clear message
+    raise ImportError(
+        "CRITICAL: dj_database_url is required for database configuration.\n"
+        "Install it with: pip install dj-database-url\n"
+        "This is required for both development and production."
+    )
 
 
 # Password validation

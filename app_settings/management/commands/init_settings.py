@@ -13,78 +13,86 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        # SECURITY: NO hardcoded values - all settings must be configured via environment or admin
         settings_to_create = [
-            # Django Core Settings
+            # Django Core Settings - MUST be configured
             {
                 'key': 'SECRET_KEY',
-                'value': 'django-insecure-coophive-database-first-secret-key-change-in-production',
-                'description': 'Django secret key for cryptographic signing - CRITICAL for security'
+                'value': '',  # NO DEFAULT - must be set via environment or admin
+                'description': 'Django secret key for cryptographic signing - CRITICAL for security. MUST be set via environment variable or admin interface.'
             },
             {
                 'key': 'DEBUG',
-                'value': 'True',
-                'description': 'Django debug mode (True/False) - should be False in production'
+                'value': '',  # NO DEFAULT - must be set via environment or admin
+                'description': 'Django debug mode (True/False) - should be False in production. MUST be set via environment variable or admin interface.'
             },
             
-            # Google OAuth Settings
+            # Google OAuth Settings - MUST be configured for OAuth to work
             {
                 'key': 'GOOGLE_OAUTH_CLIENT_ID',
-                'value': '',
-                'description': 'Google OAuth Client ID for authentication'
+                'value': '',  # NO DEFAULT - must be configured
+                'description': 'Google OAuth Client ID for authentication. MUST be configured for Google OAuth to work.'
             },
             {
                 'key': 'GOOGLE_OAUTH_CLIENT_SECRET',
-                'value': '',
-                'description': 'Google OAuth Client Secret for authentication'
+                'value': '',  # NO DEFAULT - must be configured
+                'description': 'Google OAuth Client Secret for authentication. MUST be configured for Google OAuth to work.'
             },
             
-            # Email Settings - Database-first with environment fallback
+            # Email Settings - MUST be configured for email to work
             {
                 'key': 'EMAIL_HOST',
-                'value': 'smtp.gmail.com',
-                'description': 'SMTP server hostname (default: Gmail)'
+                'value': '',  # NO DEFAULT - must be configured
+                'description': 'SMTP server hostname (e.g., smtp.gmail.com). MUST be configured for email to work.'
             },
             {
                 'key': 'EMAIL_PORT',
-                'value': '587',
-                'description': 'SMTP server port (default: 587 for TLS)'
+                'value': '',  # NO DEFAULT - must be configured
+                'description': 'SMTP server port (e.g., 587 for TLS, 465 for SSL). MUST be configured for email to work.'
             },
             {
                 'key': 'EMAIL_USE_TLS',
-                'value': 'True',
-                'description': 'Use TLS encryption for email (True/False)'
+                'value': '',  # NO DEFAULT - must be configured
+                'description': 'Use TLS encryption for email (True/False). MUST be configured for email to work.'
             },
             {
                 'key': 'EMAIL_HOST_USER',
-                'value': 'joe@coophive.network',
-                'description': 'Email username - leave empty to use environment variable'
+                'value': '',  # NO DEFAULT - must be configured
+                'description': 'Email username/address. MUST be configured for email to work.'
             },
             {
                 'key': 'EMAIL_HOST_PASSWORD',
-                'value': 'tgws eabi xakt mmks',
-                'description': 'Email password - leave empty to use environment variable'
+                'value': '',  # NO DEFAULT - must be configured
+                'description': 'Email password or app password. MUST be configured for email to work.'
             },
             {
                 'key': 'DEFAULT_FROM_EMAIL',
-                'value': 'noreply@coophive.network',
-                'description': 'Default sender email address'
+                'value': '',  # NO DEFAULT - must be configured
+                'description': 'Default sender email address. MUST be configured for email to work.'
             },
             
-            # Domain Restriction Settings
+            # Domain Restriction Settings - MUST be configured
             {
                 'key': 'DOMAIN_RESTRICTION_ENABLED',
-                'value': 'True',
-                'description': 'Enable domain restrictions for user registration'
+                'value': '',  # NO DEFAULT - must be configured
+                'description': 'Enable domain restrictions for user registration (True/False). MUST be configured.'
             },
             {
                 'key': 'ALLOWED_DOMAIN',
-                'value': 'coophive.network',
-                'description': 'Allowed email domain for registration'
+                'value': '',  # NO DEFAULT - must be configured
+                'description': 'Allowed email domain for registration (e.g., coophive.network). MUST be configured.'
             },
             {
                 'key': 'GOOGLE_VERIFICATION_ENABLED',
-                'value': 'True',
-                'description': 'Enable Google OAuth domain verification'
+                'value': '',  # NO DEFAULT - must be configured
+                'description': 'Enable Google OAuth domain verification (True/False). MUST be configured.'
+            },
+            
+            # Super Admin Settings - Only hardcoded values allowed
+            {
+                'key': 'SUPER_ADMIN_EMAILS',
+                'value': 'joe@coophive.network,levi@coophive.network',  # ONLY hardcoded values allowed per requirements
+                'description': 'Comma-separated list of super admin email addresses. These are the only hardcoded values in the system.'
             },
         ]
 

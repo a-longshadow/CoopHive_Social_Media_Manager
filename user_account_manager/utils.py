@@ -176,35 +176,49 @@ User has been automatically added to the standard user group.
 
 
 def get_email_settings():
-	"""Get email configuration with database-first, env fallback approach."""
-	def _convert_bool(value, default=False):
-		"""Convert string/bool to boolean."""
+	"""Get email configuration with database-first, env fallback approach. NO hardcoded defaults."""
+	def _convert_bool(value):
+		"""Convert string/bool to boolean. NO default - raises error if not configured."""
 		if isinstance(value, bool):
 			return value
-		if value is None:
-			return default
+		if not value:
+			raise ValueError("Email boolean setting must be configured (True/False)")
 		return str(value).lower() in ('true', '1', 'yes', 'on')
 	
-	def _convert_int(value, default=587):
-		"""Convert string/int to integer."""
+	def _convert_int(value):
+		"""Convert string/int to integer. NO default - raises error if not configured."""
 		if isinstance(value, int):
 			return value
-		if value is None:
-			return default
+		if not value:
+			raise ValueError("Email port setting must be configured (e.g., 587, 465)")
 		try:
 			return int(value)
 		except (ValueError, TypeError):
-			return default
+			raise ValueError(f"Email port must be a valid integer, got: {value}")
 	
-	return {
-		'EMAIL_HOST': _get_setting('EMAIL_HOST', 'smtp.gmail.com'),
-		'EMAIL_PORT': _convert_int(_get_setting('EMAIL_PORT', 465)),
-		'EMAIL_USE_TLS': _convert_bool(_get_setting('EMAIL_USE_TLS', False)),
-		'EMAIL_USE_SSL': _convert_bool(_get_setting('EMAIL_USE_SSL', True)),
-		'EMAIL_HOST_USER': _get_setting('EMAIL_HOST_USER'),
-		'EMAIL_HOST_PASSWORD': _get_setting('EMAIL_HOST_PASSWORD'),
-		'DEFAULT_FROM_EMAIL': _get_setting('DEFAULT_FROM_EMAIL', 'noreply@coophive.network'),
-	}
+	# NO hardcoded defaults - all settings must be configured
+	try:
+		return {
+			'EMAIL_HOST': _get_setting('EMAIL_HOST') or os.getenv('EMAIL_HOST'),
+			'EMAIL_PORT': _convert_int(_get_setting('EMAIL_PORT') or os.getenv('EMAIL_PORT')),
+			'EMAIL_USE_TLS': _convert_bool(_get_setting('EMAIL_USE_TLS') or os.getenv('EMAIL_USE_TLS')),
+			'EMAIL_USE_SSL': _convert_bool(_get_setting('EMAIL_USE_SSL') or os.getenv('EMAIL_USE_SSL')),
+			'EMAIL_HOST_USER': _get_setting('EMAIL_HOST_USER') or os.getenv('EMAIL_HOST_USER'),
+			'EMAIL_HOST_PASSWORD': _get_setting('EMAIL_HOST_PASSWORD') or os.getenv('EMAIL_HOST_PASSWORD'),
+			'DEFAULT_FROM_EMAIL': _get_setting('DEFAULT_FROM_EMAIL') or os.getenv('DEFAULT_FROM_EMAIL'),
+		}
+	except Exception as e:
+		raise ValueError(
+			f"Email configuration error: {e}\n"
+			"All email settings must be configured in database or environment variables:\n"
+			"- EMAIL_HOST (e.g., smtp.gmail.com)\n"
+			"- EMAIL_PORT (e.g., 587 for TLS, 465 for SSL)\n"
+			"- EMAIL_USE_TLS (True/False)\n"
+			"- EMAIL_USE_SSL (True/False)\n"
+			"- EMAIL_HOST_USER (your email address)\n"
+			"- EMAIL_HOST_PASSWORD (your email password/app password)\n"
+			"- DEFAULT_FROM_EMAIL (default sender address)"
+		)
 
 
 def is_email_configured():

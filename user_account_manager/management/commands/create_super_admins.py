@@ -27,11 +27,23 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """Create or update super admin users."""
-        super_admin_emails = [
-            'joe@coophive.network',
-            'levi@coophive.network'
-        ]
+        """Create or update super admin users from database settings."""
+        
+        # Get super admin emails from database (with fallback to hardcoded for bootstrap)
+        try:
+            from app_settings.models import AppSetting
+            setting = AppSetting.objects.get(key='SUPER_ADMIN_EMAILS')
+            if setting.value:
+                super_admin_emails = [email.strip() for email in setting.value.split(',')]
+                self.stdout.write(f"Using super admin emails from database: {super_admin_emails}")
+            else:
+                # Fallback to hardcoded for initial bootstrap
+                super_admin_emails = ['joe@coophive.network', 'levi@coophive.network']
+                self.stdout.write("Database setting empty, using hardcoded fallback")
+        except:
+            # Fallback to hardcoded for initial bootstrap (database not ready yet)
+            super_admin_emails = ['joe@coophive.network', 'levi@coophive.network']
+            self.stdout.write("Database not ready, using hardcoded fallback")
         
         created_count = 0
         updated_count = 0
