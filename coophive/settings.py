@@ -29,22 +29,27 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-ye_#=odz5!*ayleldxo3gpwik1
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-# Allow the Railway subdomain and custom domains
-RAILWAY_STATIC_URL = os.getenv('RAILWAY_STATIC_URL', '')
-RAILWAY_HOSTNAME = RAILWAY_STATIC_URL.replace('https://', '').replace('http://', '') if RAILWAY_STATIC_URL else None
+# Railway deployment detection
+RAILWAY_ENVIRONMENT = os.getenv('RAILWAY_ENVIRONMENT_NAME') is not None
 
+# Allow the Railway subdomain and custom domains
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
+    '0.0.0.0',  # Railway internal
     '.railway.app',  # Allow all railway.app subdomains
-    RAILWAY_HOSTNAME,
-] if not DEBUG else ['*']
+    'coophive-social-media-manager.up.railway.app',  # Your specific domain
+]
 
-# CSRF settings
+# Add any additional hosts from environment
+if os.getenv('ALLOWED_HOSTS'):
+    ALLOWED_HOSTS.extend(os.getenv('ALLOWED_HOSTS').split(','))
+
+# CSRF settings for Railway
 CSRF_TRUSTED_ORIGINS = [
     'https://*.railway.app',
-    RAILWAY_STATIC_URL,
-] if RAILWAY_STATIC_URL else []
+    'https://coophive-social-media-manager.up.railway.app',
+]
 
 # Security settings
 if not DEBUG:
@@ -141,11 +146,15 @@ WSGI_APPLICATION = 'coophive.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Database configuration
+import dj_database_url
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
 
 
