@@ -16,8 +16,8 @@ class UserAccountManagerConfig(AppConfig):
         if any(cmd in sys.argv for cmd in ['migrate', 'makemigrations', 'collectstatic', 'test', 'check', 'shell']):
             return
         
-        # Skip if we're running under certain conditions
-        if 'RUN_MAIN' not in os.environ:  # Skip during Django's auto-reload
+        # Skip if we're running under certain conditions (only in development)
+        if 'RUN_MAIN' not in os.environ and os.getenv('DEBUG', 'False').lower() == 'true':  # Skip during Django's auto-reload only in dev
             return
             
         # Import here to avoid circular imports
@@ -50,6 +50,12 @@ class UserAccountManagerConfig(AppConfig):
             timer = threading.Timer(1.0, create_super_admins_delayed)
             timer.daemon = True
             timer.start()
+            
+            # Also try immediate creation for production
+            try:
+                create_super_admins_delayed()
+            except Exception as e:
+                logger.debug(f"Immediate super admin creation failed, will retry: {e}")
                 
         except ImportError:
             # Management command not available yet

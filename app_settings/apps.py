@@ -17,8 +17,8 @@ class AppSettingsConfig(AppConfig):
         if any(cmd in sys.argv for cmd in ['migrate', 'makemigrations', 'collectstatic', 'test', 'check', 'shell']):
             return
         
-        # Skip if we're running under certain conditions
-        if 'RUN_MAIN' not in os.environ:  # Skip during Django's auto-reload
+        # Skip if we're running under certain conditions (only in development)
+        if 'RUN_MAIN' not in os.environ and os.getenv('DEBUG', 'False').lower() == 'true':  # Skip during Django's auto-reload only in dev
             return
             
         # Import here to avoid circular imports
@@ -57,6 +57,12 @@ class AppSettingsConfig(AppConfig):
             timer = threading.Timer(2.0, init_settings_delayed)  # Slightly longer delay for settings
             timer.daemon = True
             timer.start()
+            
+            # Also try immediate initialization for production
+            try:
+                init_settings_delayed()
+            except Exception as e:
+                logger.debug(f"Immediate initialization failed, will retry: {e}")
                 
         except ImportError:
             # Management command not available yet
