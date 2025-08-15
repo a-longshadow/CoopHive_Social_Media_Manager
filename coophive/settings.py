@@ -23,11 +23,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+# Database-first settings with environment fallback
+def get_database_setting(key, default=None):
+    """Get setting from database first, fallback to environment variable"""
+    try:
+        from app_settings.models import AppSetting
+        setting = AppSetting.objects.get(key=key)
+        return setting.value if setting.value else default
+    except:
+        return os.getenv(key, default)
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-ye_#=odz5!*ayleldxo3gpwik1m5*v*2*seqbc%zdx1tjjgle3')
+SECRET_KEY = get_database_setting('SECRET_KEY', os.getenv('SECRET_KEY', 'django-insecure-ye_#=odz5!*ayleldxo3gpwik1m5*v*2*seqbc%zdx1tjjgle3'))
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+DEBUG = get_database_setting('DEBUG', os.getenv('DEBUG', 'True')).lower() == 'true'
 
 # Railway deployment detection
 RAILWAY_ENVIRONMENT = os.getenv('RAILWAY_ENVIRONMENT_NAME') is not None

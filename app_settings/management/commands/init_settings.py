@@ -14,6 +14,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         settings_to_create = [
+            # Django Core Settings
+            {
+                'key': 'SECRET_KEY',
+                'value': 'django-insecure-coophive-database-first-secret-key-change-in-production',
+                'description': 'Django secret key for cryptographic signing - CRITICAL for security'
+            },
+            {
+                'key': 'DEBUG',
+                'value': 'True',
+                'description': 'Django debug mode (True/False) - should be False in production'
+            },
+            
             # Google OAuth Settings
             {
                 'key': 'GOOGLE_OAUTH_CLIENT_ID',
