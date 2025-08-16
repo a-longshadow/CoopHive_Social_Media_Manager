@@ -43,22 +43,35 @@ except Exception:
     # Fallback during initial setup
     DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-# Allow the Railway subdomain and custom domains
+# Railway environment detection and configuration
 RAILWAY_STATIC_URL = os.getenv('RAILWAY_STATIC_URL', '')
-RAILWAY_HOSTNAME = RAILWAY_STATIC_URL.replace('https://', '').replace('http://', '') if RAILWAY_STATIC_URL else None
+RAILWAY_PUBLIC_DOMAIN = os.getenv('RAILWAY_PUBLIC_DOMAIN', '')
 
+# Build allowed hosts for Railway
+RAILWAY_HOSTS = []
+if RAILWAY_STATIC_URL:
+    # Extract hostname from RAILWAY_STATIC_URL
+    hostname = RAILWAY_STATIC_URL.replace('https://', '').replace('http://', '').rstrip('/')
+    RAILWAY_HOSTS.append(hostname)
+
+if RAILWAY_PUBLIC_DOMAIN:
+    RAILWAY_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
+
+# Always allow Railway.app domains and localhost
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '.railway.app',  # Allow all railway.app subdomains
-    RAILWAY_HOSTNAME,
-] if not DEBUG else ['*']
+    '*.railway.app',
+    'coophivesocialmediamanager-production.up.railway.app',  # Explicit Railway domain
+] + RAILWAY_HOSTS
 
-# CSRF settings
+# CSRF settings - trust Railway domains
 CSRF_TRUSTED_ORIGINS = [
     'https://*.railway.app',
-    RAILWAY_STATIC_URL,
-] if RAILWAY_STATIC_URL else []
+    'https://coophivesocialmediamanager-production.up.railway.app',
+]
+if RAILWAY_STATIC_URL:
+    CSRF_TRUSTED_ORIGINS.append(RAILWAY_STATIC_URL)
 
 # Security settings
 if not DEBUG:
@@ -119,9 +132,9 @@ LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# Domain restriction
+# Domain restriction - DISABLED for Railway deployment to prevent redirect loops
 COOPHIVE_DOMAIN_RESTRICTION = {
-    'ENABLED': True,
+    'ENABLED': False,  # Temporarily disabled for Railway deployment
     'ALLOWED_DOMAIN': 'coophive.network',
 }
 
