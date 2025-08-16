@@ -30,8 +30,8 @@ urlpatterns = [
     # Custom authentication URLs (prioritized over allauth)
     path('accounts/', include('user_account_manager.urls', namespace='accounts')),
     
-    # Allauth URLs (for Google OAuth only - no duplicate paths)
-    path('accounts/google/', include('allauth.socialaccount.urls')),
+    # Allauth URLs (for Google OAuth and other social auth)
+    path('accounts/', include('allauth.urls')),
     
     # Homepage and core functionality
     path('', include('core.urls')),
