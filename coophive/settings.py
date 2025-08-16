@@ -47,47 +47,23 @@ except Exception:
 RAILWAY_STATIC_URL = os.getenv('RAILWAY_STATIC_URL', '')
 RAILWAY_PUBLIC_DOMAIN = os.getenv('RAILWAY_PUBLIC_DOMAIN', '')
 
-# Build allowed hosts for Railway
-RAILWAY_HOSTS = []
-if RAILWAY_STATIC_URL:
-    # Extract hostname from RAILWAY_STATIC_URL
-    hostname = RAILWAY_STATIC_URL.replace('https://', '').replace('http://', '').rstrip('/')
-    RAILWAY_HOSTS.append(hostname)
+# Railway hosts - simple and direct
+ALLOWED_HOSTS = ['*']  # Allow all hosts for Railway deployment
 
-if RAILWAY_PUBLIC_DOMAIN:
-    RAILWAY_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
+# CSRF settings - disable for Railway to prevent redirects
+CSRF_TRUSTED_ORIGINS = ['*']
+CSRF_COOKIE_SECURE = False
 
-# Always allow Railway.app domains and localhost
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '*.railway.app',
-    'coophivesocialmediamanager-production.up.railway.app',  # Explicit Railway domain
-] + RAILWAY_HOSTS
-
-# CSRF settings - trust Railway domains
-CSRF_TRUSTED_ORIGINS = [
-    'https://*.railway.app',
-    'https://coophivesocialmediamanager-production.up.railway.app',
-]
-if RAILWAY_STATIC_URL:
-    CSRF_TRUSTED_ORIGINS.append(RAILWAY_STATIC_URL)
-
-# Security settings
+# Security settings - MINIMAL for Railway
 if not DEBUG:
-    # Railway handles SSL termination - don't redirect at Django level
+    # NO SSL redirect - Railway handles it
     SECURE_SSL_REDIRECT = False
-    # But still secure cookies since Railway forwards with HTTPS headers
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    # NO secure cookies - causes issues on Railway
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    # Keep basic security
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    
-    # Railway proxy headers for security
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 
